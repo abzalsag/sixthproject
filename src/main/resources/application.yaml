@@ -1,0 +1,43 @@
+server:
+  port: 8080
+  address: 0.0.0.0
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sixthproject
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  # 🔥 REDIS ОСЫ ЖЕРДЕ ТҰРУЫ КЕРЕК (spring-нің астында, бірақ datasource-пен деңгейлес)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# 👇 MINIO БАПТАУЛАРЫ (Бөлек тұрады)
+minio:
+  url: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket-name: images
+
+# 👇 LOGGING БАПТАУЛАРЫ (Ең астында, бөлек)
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+        web: DEBUG
