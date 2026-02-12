@@ -14,12 +14,12 @@ import org.springframework.context.annotation.Configuration;
 @OpenAPIDefinition(
         info = @Info(
                 contact = @Contact(
-                        name = "Ali Batyr",
-                        email = "ali@mail.ru",
-                        url = "https://instagram.com/super_ali"
+                        name = "tusa",
+                        email = "tusa@mail.ru",
+                        url = "https://tusa.com/super_ali"
                 ),
-                description = "OpenApi documentation for Sixth Project (Instagram Clone)",
-                title = "OpenApi specification - Ali Batyr",
+                description = "OpenApi documentation for Sixth Project ",
+                title = "OpenApi specification - tusa",
                 version = "1.0"
         ),
         servers = {

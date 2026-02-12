@@ -20,8 +20,8 @@ public class CommunityPost {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String content; // Пост мәтіні
-    private String type;    // "DISCUSSION" немесе "POLL"
+    private String content;
+    private String type;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -30,8 +30,8 @@ public class CommunityPost {
     private LocalDateTime createdAt;
 
     @ElementCollection
-    private List<String> pollOptions; // Варианттар
+    private List<String> pollOptions;
 
     @ElementCollection
-    private Map<String, Integer> pollVotes; // Дауыстар
+    private Map<String, Integer> pollVotes;
 }

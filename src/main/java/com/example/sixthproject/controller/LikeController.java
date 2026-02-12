@@ -23,7 +23,7 @@ public class LikeController {
     @Autowired
     private EventRepository eventRepository;
 
-    // 1. Лайк басу (немесе алып тастау)
+
     @PostMapping("/toggle")
     public String toggleLike(@RequestBody Map<String, String> data) {
         String username = data.get("username");
@@ -33,14 +33,14 @@ public class LikeController {
         Event event = eventRepository.findById(eventId).orElse(null);
 
         if (user != null && event != null) {
-            // Тексереміз: Лайк бар ма?
+
             if (likeRepository.existsByUserAndEvent(user, event)) {
-                // Бар болса -> Өшіреміз (Unlike)
+
                 EventLike existingLike = likeRepository.findByUserAndEvent(user, event);
                 likeRepository.delete(existingLike);
                 return "UNLIKED";
             } else {
-                // Жоқ болса -> Қосамыз (Like)
+
                 EventLike newLike = EventLike.builder()
                         .user(user)
                         .event(event)
@@ -52,7 +52,7 @@ public class LikeController {
         return "ERROR";
     }
 
-    // 2. Тусовканың лайк санын алу
+
     @GetMapping("/count/{eventId}")
     public long getLikeCount(@PathVariable Long eventId) {
         Event event = eventRepository.findById(eventId).orElse(null);
@@ -62,7 +62,7 @@ public class LikeController {
         return 0;
     }
 
-    // 3. Мен лайк бастым ба? (Жүрекше қызыл болып тұруы үшін)
+
     @GetMapping("/check")
     public boolean checkLike(@RequestParam String username, @RequestParam Long eventId) {
         User user = userRepository.findByEmail(username).orElse(null);

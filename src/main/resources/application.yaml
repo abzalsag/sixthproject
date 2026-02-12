@@ -16,25 +16,40 @@ spring:
       hibernate:
         format_sql: true
 
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
 
-  # 🔥 REDIS ОСЫ ЖЕРДЕ ТҰРУЫ КЕРЕК (spring-нің астында, бірақ datasource-пен деңгейлес)
   data:
     redis:
       host: localhost
       port: 6379
 
-# 👇 MINIO БАПТАУЛАРЫ (Бөлек тұрады)
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: abzalsag@gmail.com
+    password: joauffbobmvbdcgr
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
 minio:
   url: http://localhost:9000
   access-key: minioadmin
   secret-key: minioadmin
   bucket-name: images
 
-# 👇 LOGGING БАПТАУЛАРЫ (Ең астында, бөлек)
 logging:
   level:
     org:

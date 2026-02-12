@@ -25,16 +25,16 @@ public class FileService {
 
     @SneakyThrows
     public String uploadFile(MultipartFile file) {
-        // 1. Егер шелек (bucket) жоқ болса, жасаймыз
+
         boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
         if (!found) {
             minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
         }
 
-        // 2. Файл атын бірегей қыламыз (UUID)
+
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
 
-        // 3. MinIO-ға жүктейміз
+
         InputStream inputStream = file.getInputStream();
         minioClient.putObject(
                 PutObjectArgs.builder()
@@ -45,7 +45,7 @@ public class FileService {
                         .build()
         );
 
-        return fileName; // Базаға тек атын сақтаймыз
+        return fileName;
     }
 
     @SneakyThrows

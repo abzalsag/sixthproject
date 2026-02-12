@@ -17,12 +17,11 @@ public class Follow {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Кім жазылды?
+
     @ManyToOne
     @JoinColumn(name = "follower_id")
     private User follower;
 
-    // Кімге жазылды?
     @ManyToOne
     @JoinColumn(name = "following_id")
     private User following;

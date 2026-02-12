@@ -45,18 +45,17 @@ public class Event {
 
     private LocalDateTime createdAt;
 
-    // Лайк саны (жай ғана сан)
+
     private Integer likes = 0;
 
-    // 🔥 ЖАҢА ҚОСЫЛҒАН БӨЛІК: Кімдер лайк басты?
-    // Бұл бізге бір адамның екі рет лайк баспауы үшін керек
+
     @ManyToMany
     @JoinTable(
             name = "event_likes",
             joinColumns = @JoinColumn(name = "event_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
-    @JsonIgnore // Шексіз циклге түспес үшін
+    @JsonIgnore
     private Set<User> likedBy = new HashSet<>();
 
     @ManyToOne
@@ -70,6 +69,14 @@ public class Event {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Ticket> tickets = new ArrayList<>();
+
+    // 🔥 ЖАҢА: Іс-шараның чаты
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "chat_id")
+    @JsonIgnore
+    private Chat chat;
+
+
 
     @PrePersist
     protected void onCreate() {

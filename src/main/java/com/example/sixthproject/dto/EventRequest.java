@@ -12,7 +12,7 @@ public class EventRequest {
     private String location;
     private LocalDateTime eventDate;
 
-    // Бұрын Double болған, енді BigDecimal қыламыз
+
     private BigDecimal price;
 
     private Integer totalTickets;

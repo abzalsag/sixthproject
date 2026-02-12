@@ -8,6 +8,7 @@ import com.example.sixthproject.repository.MessageRepository;
 import com.example.sixthproject.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,10 +21,15 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
-    // 1. Чат ашу немесе барын табу
-    public Chat getOrCreateChat(String email1, Long user2Id) {
-        User user1 = userRepository.findByEmail(email1).orElseThrow();
-        User user2 = userRepository.findById(user2Id).orElseThrow(() -> new RuntimeException("User not found"));
+
+    public Chat getOrCreateChat(String currentUsername, Long user2Id) {
+
+        User user1 = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("Current User not found"));
+
+        User user2 = userRepository.findById(user2Id)
+                .orElseThrow(() -> new RuntimeException("Target User not found"));
+
 
         return chatRepository.findChatByUsers(user1, user2)
                 .orElseGet(() -> {
@@ -36,16 +42,20 @@ public class ChatService {
                 });
     }
 
-    // 2. Менің чаттарымды алу
-    public List<Chat> getMyChats(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow();
+
+    public List<Chat> getMyChats(String currentUsername) {
+        User user = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         return chatRepository.findChatsByUser(user);
     }
 
-    // 3. Хабарлама жазу
-    public Message sendMessage(Long chatId, String senderEmail, String content) {
-        Chat chat = chatRepository.findById(chatId).orElseThrow();
-        User sender = userRepository.findByEmail(senderEmail).orElseThrow();
+
+    public Message sendMessage(Long chatId, String senderUsername, String content) {
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new RuntimeException("Chat not found"));
+
+        User sender = userRepository.findByUsername(senderUsername)
+                .orElseThrow(() -> new RuntimeException("Sender not found"));
 
         Message message = Message.builder()
                 .chat(chat)
@@ -57,9 +67,9 @@ public class ChatService {
         return messageRepository.save(message);
     }
 
-    // 4. Хабарламаларды оқу
+
     public List<Message> getMessages(Long chatId) {
-        Chat chat = chatRepository.findById(chatId).orElseThrow();
-        return chat.getMessages();
+
+        return messageRepository.findAllByChatId(chatId);
     }
 }

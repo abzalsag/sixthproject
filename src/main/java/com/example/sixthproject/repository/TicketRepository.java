@@ -7,10 +7,8 @@ import java.util.List;
 
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
-    // 1. QR код арқылы іздеу (Болашақта есікте тексеру үшін)
-    Ticket findByQrCode(String qrCode);
 
-    // 2. Адам арқылы билеттерін табу (My Tickets беті үшін)
+    Ticket findByQrCode(String qrCode);
     List<Ticket> findByUser(User user);
 
     List<Ticket> findByUser_Username(String username);

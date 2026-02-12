@@ -20,5 +20,5 @@ public class UpdateUserRequest {
     private Boolean showOnlineStatus;
     private Boolean pushNotifications;
     private Boolean emailNotifications;
-    private String interests;// Егер пароль ауыстырғысы келсе
+    private String interests;
 }

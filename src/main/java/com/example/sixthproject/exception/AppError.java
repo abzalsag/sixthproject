@@ -14,7 +14,7 @@ public class AppError {
         this.timestamp = new Date();
     }
 
-    // Getter-лер мен Setter-лер
+
     public int getStatusCode() {
         return statusCode;
     }

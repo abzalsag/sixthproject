@@ -12,9 +12,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // Барлық жолдарға рұқсат
-                .allowedOrigins("http://localhost:5173") // Frontend адресі
-                .allowedMethods("GET", "POST", "PUT", "DELETE") // Рұқсат етілген әрекеттер
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:5173")
+                .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }

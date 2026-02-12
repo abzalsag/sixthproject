@@ -30,11 +30,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        // 🔥 ТЫҢШЫ: Сұраныс келгенін тексереміз
+
         String path = request.getServletPath();
         System.out.println("🛡️ FILTER: Сұраныс келді -> " + path + " | Метод: " + request.getMethod());
 
-        // 🔥 ӨЗГЕРДІ: Егер жолда "/api/v1/auth" болса -> өткізіп жібереміз
+
         if (path.contains("/api/v1/auth")) {
             System.out.println("⏩ FILTER: Auth сұранысы (v1), токен тексермейміз -> Өткіздік");
             filterChain.doFilter(request, response);

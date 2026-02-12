@@ -7,7 +7,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Data
-@Builder // 🔥 ОСЫ ЖОЛ (Builder) БОЛМАҒАНДЫҚТАН ҚАТЕ ШЫҚТЫ
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -18,18 +18,17 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Қай чатқа тиесілі?
+
     @ManyToOne
     @JoinColumn(name = "chat_id")
-    @JsonIgnore // Тұйық цикл болмас үшін
+    @JsonIgnore
     private Chat chat;
 
-    // Кім жазды?
     @ManyToOne
     @JoinColumn(name = "sender_id")
     private User sender;
 
-    private String content; // Хабарлама мәтіні
+    private String content;
 
-    private LocalDateTime timestamp; // Уақыты
+    private LocalDateTime timestamp;
 }

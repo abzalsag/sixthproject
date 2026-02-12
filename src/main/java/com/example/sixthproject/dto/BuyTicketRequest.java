@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 public class BuyTicketRequest {
-    private Long userId;   // Кім алады?
-    private Long eventId;  // Қай концертке алады?
+    private Long userId;
+    private Long eventId;
 }

@@ -14,7 +14,7 @@ public class FollowController {
 
     private final FollowService followService;
 
-    // Жазылу (POST)
+
     @PostMapping
     public String follow(@RequestBody FollowRequest request) {
         return followService.followUser(request);

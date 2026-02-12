@@ -6,7 +6,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "event_likes", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "event_id"}) // Бір адам 2 рет лайк баса алмауы үшін
+        @UniqueConstraint(columnNames = {"user_id", "event_id"})
 })
 @Data
 @NoArgsConstructor

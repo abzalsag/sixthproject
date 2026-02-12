@@ -1,14 +1,16 @@
 package com.example.sixthproject.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore; // Осыны қосу маңызды
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "comments")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -18,19 +20,27 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 🔥 ӨЗГЕРІС: "text" емес, "content" болуы керек (React-пен сәйкес келу үшін)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "event_id", nullable = false)
-    @JsonIgnore // 🔥 Бұл шексіз циклге түсіп кетпес үшін керек
-    private Event event;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private User user;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private Post post;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private Event event;
 }

@@ -16,9 +16,9 @@ public class RedisConfig {
 
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
-        // Redis кэш баптаулары (Default)
+
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(10)); // Кэш 10 минуттан кейін өшеді
+                .entryTtl(Duration.ofMinutes(10));
 
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(config)

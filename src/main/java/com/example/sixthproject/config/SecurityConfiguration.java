@@ -30,24 +30,25 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // 1. АШЫҚ ЕСІКТЕР (Login, Register)
                         .requestMatchers("/api/v1/auth/**").permitAll()
 
-                        // 2. MINIO & REDIS (Тексеру үшін)
+
                         .requestMatchers("/api/files/**").permitAll()
-                        .requestMatchers("/api/redis/**").permitAll() // 🔥 Redis тексеруге рұқсат
+                        .requestMatchers("/api/redis/**").permitAll()
                         .requestMatchers("/api/v1/events/**").permitAll()
                         .requestMatchers("/api/v1/users/avatar/**").permitAll()
 
-                        // 3. 🔥 SWAGGER-ГЕ ТОЛЫҚ РҰҚСАТ (Осы жерді толықтырдым)
+
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/webjars/**"  // 👈 ОСЫНЫ ҚОСТЫМ (Swagger-дің дизайны үшін керек)
+                                "/webjars/**"
                         ).permitAll()
 
-                        // 4. ҚАЛҒАНЫ ЖАБЫҚ (Токен сұрайды)
+                        .requestMatchers("/posts/**").authenticated()
+
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

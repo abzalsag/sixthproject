@@ -10,6 +10,8 @@ import com.example.sixthproject.entity.User;
 import com.example.sixthproject.repository.EventRepository;
 import com.example.sixthproject.repository.TicketRepository;
 import com.example.sixthproject.repository.UserRepository;
+import com.example.sixthproject.service.TicketService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +21,11 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/tickets")
+@RequiredArgsConstructor
+
 public class TicketController {
+
+    private final TicketService ticketService;
 
     @Autowired
     private TicketRepository ticketRepository;
@@ -39,21 +45,19 @@ public class TicketController {
         Event event = eventRepository.findById(eventId).orElse(null);
 
         if (user != null && event != null) {
-            // 🔥 ТЕКСЕРУ: Билет қалды ма?
+
             if (event.getTotalTickets() <= 0) {
                 return "Өкінішке орай, билеттер таусылды! (SOLD OUT)";
             }
-
-            // 1. Билет жасаймыз
             Ticket ticket = new Ticket();
             ticket.setUser(user);
             ticket.setEvent(event);
             ticket.setQrCode(UUID.randomUUID().toString());
             ticketRepository.save(ticket);
 
-            // 2. Билет санын азайтамыз
+
             event.setTotalTickets(event.getTotalTickets() - 1);
-            eventRepository.save(event); // Жаңартылған санды сақтаймыз
+            eventRepository.save(event);
 
             return "Билет сәтті алынды! QR код профильде.";
         }

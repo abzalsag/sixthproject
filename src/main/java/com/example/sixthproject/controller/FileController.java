@@ -30,9 +30,7 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("/api/files")
 public class FileController {
 
-    // ==========================================
-    // 1. ЕСКІ КОДТАР (ЛОКАЛДЫ САҚТАУ ҮШІН) - ТИІСПЕДІМ
-    // ==========================================
+
     private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads";
 
     @PostMapping("/upload")
@@ -74,23 +72,21 @@ public class FileController {
         }
     }
 
-    // ==========================================
-    // 2. ЖАҢА КОДТАР (MINIO ҮШІН) - ОСЫ ЖЕРДІ ҚОСТЫМ 🔥
-    // ==========================================
+
 
     @Autowired
-    private MinioClient minioClient; // MinIO-мен байланыс
+    private MinioClient minioClient;
 
     @Value("${minio.bucket-name}")
-    private String bucketName; // "images" деген шелек аты
+    private String bucketName;
 
-    @PostMapping("/upload-minio") // Жаңа адрес!
+    @PostMapping("/upload-minio")
     public ResponseEntity<String> uploadToMinio(@RequestParam("file") MultipartFile file) {
         try {
-            // Файл атын өзгерту (қайталанбас үшін)
+
             String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
 
-            // MinIO-ға файлды жіберу
+
             InputStream inputStream = file.getInputStream();
             minioClient.putObject(
                     PutObjectArgs.builder()
@@ -101,7 +97,7 @@ public class FileController {
                             .build()
             );
 
-            // MinIO-дан суретті көретін сілтеме жасау (7 күнге жарамды)
+
             String url = minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.GET)

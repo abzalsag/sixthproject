@@ -27,12 +27,12 @@ public class ApplicationConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        // 🔥 ТҮЗЕТУ:
-        // Жақшаның ішін БОС қалдырамыз:
+
+
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
 
-        // Содан кейін бөлек жолмен қосамыз:
-        authProvider.setUserDetailsService(userDetailsService()); // 👈 Дұрысы осылай!
+
+        authProvider.setUserDetailsService(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
 
         return authProvider;

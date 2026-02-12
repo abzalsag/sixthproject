@@ -8,34 +8,32 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.util.List;
 import java.util.Collections;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/users") // 🔥 URL дәл осылай болуы керек
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserRepository userRepository;
     private final UserService service;
+    private final PasswordEncoder passwordEncoder;
 
-    // --- 1. АВАТАР ЖҮКТЕУ ---
+
     @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadAvatar(
-            @RequestParam("file") MultipartFile file,
-            Principal principal
-    ) {
+    public ResponseEntity<?> uploadAvatar(@RequestParam("file") MultipartFile file, Principal principal) {
         service.uploadAvatar(principal.getName(), file);
-        return ResponseEntity.ok("Avatar updated successfully via MinIO!");
+        return ResponseEntity.ok("Avatar updated successfully!");
     }
 
-    // --- 2. АВАТАРДЫ КӨРУ (DOWNLOAD) ---
-    // 🔥 ТҮЗЕТУ: {filename:.+} қойдым.
-    // Бұл нүктесі бар файлдарды (.jpg, .png) дұрыс оқу үшін керек!
+
     @GetMapping("/avatar/{filename:.+}")
     public ResponseEntity<InputStreamResource> getAvatar(@PathVariable String filename) {
         return ResponseEntity.ok()
@@ -43,98 +41,75 @@ public class UserController {
                 .body(new InputStreamResource(service.getAvatarStream(filename)));
     }
 
-    // --- 3. ӨЗ ПРОФИЛІН КӨРУ (ME) ---
+
     @GetMapping("/me")
     public ResponseEntity<User> getCurrentUser(Principal principal) {
-        // 🔥 ТҮЗЕТУ: findByEmail емес, findByUsername!
-        // Себебі principal.getName() енді никнеймді қайтарады.
         return userRepository.findByUsername(principal.getName())
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // --- 4. ПРОФИЛЬДІ ӨЗГЕРТУ (Edit Profile) ---
+
     @PutMapping("/me")
     public ResponseEntity<User> updateCurrentUser(@RequestBody UpdateUserRequest request, Principal principal) {
-        if (principal == null) return ResponseEntity.status(401).build();
-
-        // 🔥 ТҮЗЕТУ: Мұнда да findByUsername болуы керек!
         User user = userRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // UserService арқылы жаңартамыз (таза код үшін)
         service.updateUser(user, request);
-
-        // Bio-ны осы жерде де қоса салуға болады немесе сервиске жібер
-        if (request.getBio() != null) user.setBio(request.getBio());
-
-        // Аватар URL келсе (MinIO емес, жай ссылка болса)
-        if (request.getAvatarUrl() != null) user.setAvatarUrl(request.getAvatarUrl());
-
         return ResponseEntity.ok(userRepository.save(user));
     }
 
-    // --- 5. PASSWORD ӨЗГЕРТУ ---
+
     @PutMapping("/password")
-    public ResponseEntity<?> changePassword(@RequestBody java.util.Map<String, String> request, Principal principal) {
-        // 🔥 ТҮЗЕТУ: findByUsername
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> request, Principal principal) {
         User user = userRepository.findByUsername(principal.getName()).orElseThrow();
 
         String oldPass = request.get("oldPassword");
         String newPass = request.get("newPassword");
 
-        if (!user.getPassword().equals(oldPass)) {
-            return ResponseEntity.status(400).body("Ескі құпия сөз қате!");
+
+        if (!passwordEncoder.matches(oldPass, user.getPassword())) {
+            return ResponseEntity.status(400).body("Ескі құпия сөз қате! ❌");
         }
 
-        user.setPassword(newPass);
+        user.setPassword(passwordEncoder.encode(newPass));
         userRepository.save(user);
-        return ResponseEntity.ok("Құпия сөз өзгертілді!");
+        return ResponseEntity.ok("Құпия сөз сәтті өзгертілді! ✅");
     }
 
-    // --- 6. SETTINGS ---
+
     @PutMapping("/settings")
     public ResponseEntity<User> updateSettings(@RequestBody UpdateUserRequest request, Principal principal) {
-        // 🔥 ТҮЗЕТУ: findByUsername
-        User user = userRepository.findByUsername(principal.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByUsername(principal.getName()).orElseThrow();
 
-        if (request.getCity() != null) user.setCity(request.getCity());
-        if (request.getInterests() != null) user.setInterests(request.getInterests());
-        if (request.getIsPrivate() != null) user.setPrivate(request.getIsPrivate());
-        if (request.getShowOnlineStatus() != null) user.setShowOnlineStatus(request.getShowOnlineStatus());
-        if (request.getPushNotifications() != null) user.setPushNotifications(request.getPushNotifications());
-        if (request.getEmailNotifications() != null) user.setEmailNotifications(request.getEmailNotifications());
-
-        // Негізгі инфоларды да жаңарту
         service.updateUser(user, request);
-
         return ResponseEntity.ok(userRepository.save(user));
     }
 
-    // --- 7. FOLLOW / UNFOLLOW ---
+
+    @org.springframework.transaction.annotation.Transactional
     @PostMapping("/{id}/follow")
     public ResponseEntity<?> followUser(@PathVariable Long id, Principal principal) {
-        // 🔥 ТҮЗЕТУ: findByUsername
         User currentUser = userRepository.findByUsername(principal.getName()).orElseThrow();
         User userToFollow = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (currentUser.getFollowing() == null) {
-            currentUser.setFollowing(new java.util.HashSet<>());
+
+        if (currentUser.getId().equals(userToFollow.getId())) {
+            return ResponseEntity.badRequest().body("Өзіңізге тіркеле алмайсыз! ❌");
         }
 
         if (currentUser.getFollowing().contains(userToFollow)) {
             currentUser.getFollowing().remove(userToFollow);
             userRepository.save(currentUser);
-            return ResponseEntity.ok("Unfollowed");
+            return ResponseEntity.ok("Unfollowed ❌");
         } else {
             currentUser.getFollowing().add(userToFollow);
             userRepository.save(currentUser);
-            return ResponseEntity.ok("Followed");
+            return ResponseEntity.ok("Followed ✅");
         }
     }
 
-    // --- 8. ІЗДЕУ (SEARCH) ---
+
     @GetMapping("/search")
     public ResponseEntity<List<User>> searchUsers(@RequestParam String query) {
         if (query == null || query.trim().isEmpty()) {
@@ -143,22 +118,21 @@ public class UserController {
         return ResponseEntity.ok(userRepository.searchUsers(query));
     }
 
-    // --- 9. Followers/Following Lists ---
+
     @GetMapping("/{id}/followers-list")
     public ResponseEntity<List<User>> getFollowersList(@PathVariable Long id) {
-        return ResponseEntity.ok(userRepository.findByFollowingId(id));
+        return ResponseEntity.ok(userRepository.findByFollowingId(id)); // Керісінше логика
     }
 
     @GetMapping("/{id}/following-list")
     public ResponseEntity<List<User>> getFollowingList(@PathVariable Long id) {
-        return ResponseEntity.ok(userRepository.findByFollowersId(id));
+        return ResponseEntity.ok(userRepository.findByFollowersId(id)); // Керісінше логика
     }
 
-    // --- 10. АККАУНТТЫ ӨШІРУ ---
     @DeleteMapping("/me")
     public ResponseEntity<?> deleteAccount(Principal principal) {
         User user = userRepository.findByUsername(principal.getName()).orElseThrow();
         userRepository.delete(user);
-        return ResponseEntity.ok("Аккаунт толықтай өшірілді.");
+        return ResponseEntity.ok("Аккаунт өшірілді 👋");
     }
 }

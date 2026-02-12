@@ -20,13 +20,12 @@ public class FileStorageService {
 
     public String uploadFile(MultipartFile file) {
         try {
-            // Файл аты қайталанбас үшін алдына уақытты қосамыз
+
             String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
 
-            // Файлды оқу
             InputStream inputStream = file.getInputStream();
 
-            // MinIO-ға жіберу
+
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
@@ -36,11 +35,13 @@ public class FileStorageService {
                             .build()
             );
 
-            return "Файл сәтті жүктелді: " + fileName;
+
+            return fileName;
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "Қате шықты: " + e.getMessage();
+
+            throw new RuntimeException("MinIO-ға жүктеу мүмкін болмады: " + e.getMessage());
         }
     }
 }

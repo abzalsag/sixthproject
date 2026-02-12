@@ -23,26 +23,26 @@ public class Ticket {
     @Column(unique = true)
     private String qrCode;
 
-    // Билет қай тусовкаға арналған?
+
     @ManyToOne
     @JoinColumn(name = "event_id")
     private Event event;
 
-    // Билет кімге тиесілі?
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-    private String status; // 'ACTIVE', 'USED'
+    private String status;
 
     @CreationTimestamp
     private LocalDateTime boughtAt;
 
-    // Билет сақталған кезде QR кодты автоматты түрде жасаймыз
+
     @PrePersist
     protected void onCreate() {
         this.status = "ACTIVE";
-        // UUID - бұл ешқашан қайталанбайтын ұзын код
+
         this.qrCode = "TUSA-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 }

@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 public class FollowRequest {
-    private Long followerId;   // Кім жазылып жатыр? (Мен)
-    private Long followingId;  // Кімге жазылып жатыр? (Сен)
+    private Long followerId;
+    private Long followingId;
 }

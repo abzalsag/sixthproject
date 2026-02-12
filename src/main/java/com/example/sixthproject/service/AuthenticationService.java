@@ -13,6 +13,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -21,14 +23,14 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
+    private final EmailService emailService;
 
-    // --- ТІРКЕЛУ ---
     public AuthenticationResponse register(RegisterRequest request) {
         var user = User.builder()
                 .firstname(request.getFirstname())
                 .lastname(request.getLastname())
                 .email(request.getEmail())
-                .username(request.getUsername()) // 🔥 МАҢЫЗДЫ: Никнеймді базаға сақтаймыз!
+                .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)
                 .build();
@@ -41,23 +43,59 @@ public class AuthenticationService {
                 .build();
     }
 
-    // --- КІРУ (LOGIN) ---
+
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        // 1. AuthenticationManager-ге Username жібереміз
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getUsername(), // 👈 ӨЗГЕРДІ: getEmail() -> getUsername()
+                        request.getUsername(),
                         request.getPassword()
                 )
         );
 
-        // 2. Базадан USERNAME бойынша іздейміз
-        var user = repository.findByUsername(request.getUsername()) // 👈 ӨЗГЕРДІ: findByEmail -> findByUsername
+        var user = repository.findByUsername(request.getUsername())
                 .orElseThrow();
 
         var jwtToken = jwtUtils.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .build();
+    }
+
+
+    public void forgotPassword(String email) {
+
+        var user = repository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+
+        String code = String.valueOf((int) (Math.random() * 9000) + 1000);
+
+
+        user.setVerificationCode(code);
+        user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
+        repository.save(user);
+
+
+        emailService.sendResetCode(email, code);
+    }
+
+    public void resetPassword(String email, String code, String newPassword) {
+        var user = repository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+
+        if (user.getVerificationCode() == null || !user.getVerificationCode().equals(code)) {
+            throw new RuntimeException("Қате код! (Invalid Code)");
+        }
+
+        if (user.getVerificationCodeExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Кодтың уақыты өтіп кеткен! (Code Expired)");
+        }
+
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setVerificationCode(null);
+        user.setVerificationCodeExpiresAt(null);
+        repository.save(user);
     }
 }
