@@ -48,6 +48,8 @@ public class Event {
 
     private Integer likes = 0;
 
+    private Double averageRating = 0.0;
+
 
     @ManyToMany
     @JoinTable(
@@ -61,6 +63,10 @@ public class Event {
     @ManyToOne
     @JoinColumn(name = "organizer_id")
     private User organizer;
+
+    @OneToOne(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private EventAnalytics analytics;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
@@ -76,7 +82,13 @@ public class Event {
     private Chat chat;
 
     // 🔥 ЖАҢА: Іс-шараның чаты
-
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "event_hashtags",
+            joinColumns = @JoinColumn(name = "event_id"),
+            inverseJoinColumns = @JoinColumn(name = "hashtag_id")
+    )
+    private Set<Hashtag> hashtags;
 
 
 

@@ -38,6 +38,10 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/v1/events/**").permitAll()
                         .requestMatchers("/api/v1/users/avatar/**").permitAll()
 
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/app/**").permitAll()
+                        .requestMatchers("/topic/**").permitAll()
+
 
                         .requestMatchers(
                                 "/v3/api-docs/**",

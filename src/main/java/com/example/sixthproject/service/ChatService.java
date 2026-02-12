@@ -8,7 +8,6 @@ import com.example.sixthproject.repository.MessageRepository;
 import com.example.sixthproject.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,15 +20,11 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
-
-    public Chat getOrCreateChat(String currentUsername, Long user2Id) {
-
-        User user1 = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new RuntimeException("Current User not found"));
-
-        User user2 = userRepository.findById(user2Id)
-                .orElseThrow(() -> new RuntimeException("Target User not found"));
-
+    // 1. Чат ашу немесе барын табу
+    // 🔥 ТҮЗЕТУ: email1 орнына username1 қолданамыз
+    public Chat getOrCreateChat(String username1, Long user2Id) {
+        User user1 = userRepository.findByUsername(username1).orElseThrow();
+        User user2 = userRepository.findById(user2Id).orElseThrow(() -> new RuntimeException("User not found"));
 
         return chatRepository.findChatByUsers(user1, user2)
                 .orElseGet(() -> {
@@ -42,20 +37,18 @@ public class ChatService {
                 });
     }
 
-
-    public List<Chat> getMyChats(String currentUsername) {
-        User user = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    // 2. Менің чаттарымды алу
+    // 🔥 ТҮЗЕТУ: email орнына username қолданамыз
+    public List<Chat> getMyChats(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow();
         return chatRepository.findChatsByUser(user);
     }
 
-
+    // 3. Хабарлама жазу
+    // 🔥 ТҮЗЕТУ: senderEmail орнына senderUsername қолданамыз
     public Message sendMessage(Long chatId, String senderUsername, String content) {
-        Chat chat = chatRepository.findById(chatId)
-                .orElseThrow(() -> new RuntimeException("Chat not found"));
-
-        User sender = userRepository.findByUsername(senderUsername)
-                .orElseThrow(() -> new RuntimeException("Sender not found"));
+        Chat chat = chatRepository.findById(chatId).orElseThrow();
+        User sender = userRepository.findByUsername(senderUsername).orElseThrow();
 
         Message message = Message.builder()
                 .chat(chat)
@@ -67,9 +60,9 @@ public class ChatService {
         return messageRepository.save(message);
     }
 
-
+    // 4. Хабарламаларды оқу
     public List<Message> getMessages(Long chatId) {
-
-        return messageRepository.findAllByChatId(chatId);
+        Chat chat = chatRepository.findById(chatId).orElseThrow();
+        return chat.getMessages();
     }
 }

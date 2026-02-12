@@ -31,4 +31,7 @@ public class Message {
     private String content;
 
     private LocalDateTime timestamp;
+
+    @Column(columnDefinition = "boolean default false")
+    private boolean isRead = false;
 }

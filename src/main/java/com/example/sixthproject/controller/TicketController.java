@@ -7,8 +7,11 @@ import com.example.sixthproject.repository.TicketRepository;
 import com.example.sixthproject.repository.UserRepository;
 import com.example.sixthproject.service.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,5 +48,36 @@ public class TicketController {
     @GetMapping("/my-tickets/{username}")
     public List<Ticket> getMyTickets(@PathVariable String username) {
         return ticketRepository.findByUser_Username(username);
+    }
+
+    // Билетті тексеру (QR код бойынша)
+    @GetMapping("/verify/{qrCode}")
+    public ResponseEntity<?> verifyTicket(@PathVariable String qrCode) {
+        return ticketRepository.findByQrCode(qrCode)
+                .map(ticket -> {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("valid", true);
+                    response.put("eventTitle", ticket.getEvent().getTitle());
+                    response.put("userName", ticket.getUser().getFirstname());
+                    response.put("eventDate", ticket.getEvent().getEventDate());
+                    return ResponseEntity.ok(response);
+                })
+                .orElse(ResponseEntity.status(404).body(Map.of("valid", false, "message", "Билет табылмады")));
+    }
+
+    // Билетті пайдаланылған деп белгілеу
+    @PostMapping("/use/{qrCode}")
+    public ResponseEntity<?> useTicket(@PathVariable String qrCode) {
+        return ticketRepository.findByQrCode(qrCode)
+                .map(ticket -> {
+                    if (ticket.isUsed()) {
+                        return ResponseEntity.status(400).body("Билет әлдеқашан пайдаланылған!");
+                    }
+                    ticket.setUsed(true);
+                    ticket.setUsedAt(LocalDateTime.now());
+                    ticketRepository.save(ticket);
+                    return ResponseEntity.ok("Билет қабылданды ✅");
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

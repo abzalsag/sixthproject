@@ -23,6 +23,11 @@ public class Ticket {
     @Column(unique = true)
     private String qrCode;
 
+    @Column(columnDefinition = "boolean default false")
+    private boolean used = false;
+
+    private LocalDateTime usedAt;
+
 
     @ManyToOne
     @JoinColumn(name = "event_id")

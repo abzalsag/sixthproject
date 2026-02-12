@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
 
 @RestController
 @RequestMapping("/api/community")
@@ -48,6 +49,29 @@ public class CommunityController {
                 communityRepository.save(post);
             }
             return ResponseEntity.ok(post);
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    // Community постқа лайк басу
+    @PostMapping("/{id}/like")
+    public ResponseEntity<?> toggleLike(@PathVariable Long id, Principal principal) {
+        return communityRepository.findById(id).map(post -> {
+            User user = userRepository.findByUsername(principal.getName()).orElseThrow();
+
+            if (post.getLikedBy() == null) {
+                post.setLikedBy(new HashSet<>());
+            }
+
+            if (post.getLikedBy().contains(user)) {
+                post.getLikedBy().remove(user);
+                post.setLikes(post.getLikes() - 1);
+            } else {
+                post.getLikedBy().add(user);
+                if (post.getLikes() == null) post.setLikes(0);
+                post.setLikes(post.getLikes() + 1);
+            }
+
+            return ResponseEntity.ok(communityRepository.save(post));
         }).orElse(ResponseEntity.notFound().build());
     }
 }
