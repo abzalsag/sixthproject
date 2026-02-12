@@ -70,11 +70,13 @@ public class Event {
     @JsonIgnore
     private List<Ticket> tickets = new ArrayList<>();
 
-    // 🔥 ЖАҢА: Іс-шараның чаты
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "chat_id")
     @JsonIgnore
     private Chat chat;
+
+    // 🔥 ЖАҢА: Іс-шараның чаты
+
 
 
 

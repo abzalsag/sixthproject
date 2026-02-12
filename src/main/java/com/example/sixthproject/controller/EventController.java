@@ -1,5 +1,6 @@
 package com.example.sixthproject.controller;
 
+import com.example.sixthproject.dto.BuyTicketRequest;
 import com.example.sixthproject.entity.Comment;
 import com.example.sixthproject.entity.Event;
 import com.example.sixthproject.entity.Ticket;
@@ -8,6 +9,7 @@ import com.example.sixthproject.repository.CommentRepository;
 import com.example.sixthproject.repository.EventRepository;
 import com.example.sixthproject.repository.TicketRepository;
 import com.example.sixthproject.repository.UserRepository;
+import com.example.sixthproject.service.TicketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +28,7 @@ public class EventController {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final TicketRepository ticketRepository;
+    private final TicketService ticketService;
 
 
     private User getOrCreateUser(Principal principal) {
@@ -123,18 +126,23 @@ public class EventController {
         return ResponseEntity.ok(commentRepository.findAllByEventId(id));
     }
 
-
     @PostMapping("/{id}/buy")
     public ResponseEntity<Ticket> buyTicket(@PathVariable Long id, Principal principal) {
-        return eventRepository.findById(id).map(event -> {
-            User buyer = getOrCreateUser(principal);
-            Ticket ticket = Ticket.builder()
-                    .event(event)
-                    .user(buyer)
-                    .qrCode(UUID.randomUUID().toString())
-                    .build();
-            return ResponseEntity.ok(ticketRepository.save(ticket));
-        }).orElse(ResponseEntity.notFound().build());
+        User buyer = getOrCreateUser(principal);
+
+        BuyTicketRequest request = new BuyTicketRequest();
+        request.setUserId(buyer.getId());
+        request.setEventId(id);
+
+
+        ticketService.buyTicket(request);
+
+        return eventRepository.findById(id)
+                .flatMap(event -> ticketRepository.findByUser(buyer).stream()
+                        .filter(t -> t.getEvent().getId().equals(id))
+                        .findFirst()
+                        .map(ResponseEntity::ok))
+                .orElse(ResponseEntity.notFound().build());
     }
 
 

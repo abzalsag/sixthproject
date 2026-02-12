@@ -21,13 +21,11 @@ public class Chat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 🔥 ЖАҢА: Чат атауы
     private String chatName;
 
-    // 🔥 ЖАҢА: Топтық чат па?
-    private boolean isGroupChat;
+    @Builder.Default
+    private boolean isGroupChat = false;
 
-    // 🔥 ЖАҢА: Көп қатысушылар
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "chat_participants",
@@ -39,7 +37,6 @@ public class Chat {
     @JsonIgnore
     private Set<User> participants = new HashSet<>();
 
-    // ЕСКІ: 1-на-1 чат үшін (сақталады)
     @ManyToOne
     @JoinColumn(name = "user1_id")
     private User user1;

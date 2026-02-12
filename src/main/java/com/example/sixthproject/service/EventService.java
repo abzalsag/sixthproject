@@ -47,7 +47,7 @@ public class EventService {
                 .price(request.getPrice())
                 .totalTickets(request.getTotalTickets())
                 .organizer(organizer)
-                .chat(eventChat) // 🔥 Чатты байланыстыру
+                .chat(eventChat)
                 .build();
 
         eventRepository.save(newEvent);
