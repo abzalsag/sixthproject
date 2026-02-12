@@ -56,3 +56,13 @@ logging:
       springframework:
         security: DEBUG
         web: DEBUG
+
+stripe:
+  api:
+    key: sk_test_YOUR_KEY
+  webhook:
+    secret: whsec_YOUR_WEBHOOK_SECRET
+  currency: KZT
+
+firebase:
+  service-account-path: firebase-service-account.json

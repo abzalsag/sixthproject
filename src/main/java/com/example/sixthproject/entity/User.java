@@ -14,8 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-
-
 @Getter
 @Setter
 @Builder
@@ -23,7 +21,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Entity
 @Table(name = "_user")
-
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User implements UserDetails {
@@ -50,10 +47,10 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-
     private String city;
     private String bio;
     private String gender;
+    private String interests;
 
     @Column(columnDefinition = "boolean default false")
     private boolean isPrivate = false;
@@ -67,10 +64,14 @@ public class User implements UserDetails {
     @Column(columnDefinition = "boolean default false")
     private boolean emailNotifications = false;
 
-    private String interests;
+    @Column(columnDefinition = "boolean default true")
+    private boolean accountNonLocked = true;
 
+    // Email verification
+    private String verificationCode;
+    private LocalDateTime verificationCodeExpiresAt;
 
-
+    // Following/Followers
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_following",
@@ -78,15 +79,15 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "following_id")
     )
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @JsonIgnore
-
     private Set<User> following = new HashSet<>();
 
     @ManyToMany(mappedBy = "following", fetch = FetchType.EAGER)
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @JsonIgnore
     private Set<User> followers = new HashSet<>();
-
 
     @Transient
     public int getFollowersCount() {
@@ -98,8 +99,7 @@ public class User implements UserDetails {
         return following == null ? 0 : following.size();
     }
 
-
-
+    // UserDetails implementation
     @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -119,7 +119,7 @@ public class User implements UserDetails {
 
     @Override
     @JsonIgnore
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() { return accountNonLocked; }
 
     @Override
     @JsonIgnore
@@ -129,10 +129,14 @@ public class User implements UserDetails {
     @JsonIgnore
     public boolean isEnabled() { return true; }
 
-
-
-    private String verificationCode;
-    private LocalDateTime verificationCodeExpiresAt;
+    @ManyToMany
+    @JoinTable(
+            name = "user_saved_events",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "event_id")
+    )
+    @JsonIgnore
+    private Set<Event> savedEvents = new HashSet<>();
 
     @ManyToMany
     @JoinTable(
@@ -140,6 +144,5 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "post_id")
     )
-    @JsonIgnore
-    private Set<Post> savedPosts = new HashSet<>();
+    private Set<Post> savedPosts;
 }

@@ -37,10 +37,13 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/redis/**").permitAll()
                         .requestMatchers("/api/v1/events/**").permitAll()
                         .requestMatchers("/api/v1/users/avatar/**").permitAll()
+                        .requestMatchers("/api/payments/**").permitAll()
+
 
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/app/**").permitAll()
                         .requestMatchers("/topic/**").permitAll()
+
 
 
                         .requestMatchers(

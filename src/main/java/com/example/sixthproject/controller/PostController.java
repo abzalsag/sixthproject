@@ -24,7 +24,6 @@ public class PostController {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
 
-
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Post> createPost(
             @RequestParam("caption") String caption,
@@ -38,34 +37,33 @@ public class PostController {
         return ResponseEntity.ok(post);
     }
 
-
     @GetMapping
     public ResponseEntity<List<Post>> getAllPosts() {
         return ResponseEntity.ok(postService.getAllPosts());
     }
+
+    // 🔥 ТҮЗЕТІЛГЕН ФУНКЦИЯ
     @PostMapping("/{postId}/save")
     public ResponseEntity<String> toggleSavePost(@PathVariable Long postId, Principal principal) {
 
         User user = userRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-
+        // 🔥 Event емес, Post болуы керек!
+        // Және savedEvents емес, savedPosts болуы керек!
         if (user.getSavedPosts().contains(post)) {
             user.getSavedPosts().remove(post);
-            userRepository.save(user);
-            return ResponseEntity.ok("Post removed from saved 🗑️");
-        }
-        else {
+            userRepository.save(user); // Сақтауды ұмытпа!
+            return ResponseEntity.ok("Пост сақталғандардан алынды");
+        } else {
             user.getSavedPosts().add(post);
-            userRepository.save(user);
-            return ResponseEntity.ok("Post saved successfully 💾");
+            userRepository.save(user); // Сақтауды ұмытпа!
+            return ResponseEntity.ok("Пост сақталды ✅");
         }
     }
-
 
     @GetMapping("/saved")
     public ResponseEntity<Set<Post>> getSavedPosts(Principal principal) {
@@ -74,7 +72,6 @@ public class PostController {
 
         return ResponseEntity.ok(user.getSavedPosts());
     }
-
 
     @GetMapping("/feed")
     public ResponseEntity<List<Post>> getFeed(Principal principal) {

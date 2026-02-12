@@ -6,12 +6,13 @@ import com.example.sixthproject.repository.CommentRepository;
 import com.example.sixthproject.repository.EventRepository;
 import com.example.sixthproject.repository.TicketRepository;
 import com.example.sixthproject.repository.UserRepository;
-import com.example.sixthproject.service.AnalyticsService;
-import com.example.sixthproject.service.HashtagService;
-import com.example.sixthproject.service.NotificationService;
-import com.example.sixthproject.service.TicketService;
+import com.example.sixthproject.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,7 @@ public class EventController {
     private final CommentRepository commentRepository;
     private final TicketRepository ticketRepository;
     private final TicketService ticketService;
+    private final PushNotificationService pushService;
 
 
     private User getOrCreateUser(Principal principal) {
@@ -214,8 +216,15 @@ public class EventController {
                 if (event.getLikes() == null) event.setLikes(0);
                 event.setLikes(event.getLikes() + 1);
 
-                // 🔥 ЖАҢА: Хабарландыру жіберу
-                notificationService.createLikeNotification(currentUser, event);
+                // 🔥 ЖАҢА: Push notification жіберу
+                if (event.getOrganizer() != null && !event.getOrganizer().equals(currentUser)) {
+                    pushService.sendToUser(
+                            event.getOrganizer(),
+                            "Жаңа лайк! ❤️",
+                            currentUser.getFirstname() + " сіздің постыңызға лайк басты",
+                            event.getImageUrl()
+                    );
+                }
             }
 
             return ResponseEntity.ok(eventRepository.save(event));
@@ -246,25 +255,25 @@ public class EventController {
     @Autowired
     private AnalyticsService analyticsService; // Жаңа қосу
 
-    @PostMapping("/{id}/buy")
-    public ResponseEntity<Ticket> buyTicket(@PathVariable Long id, Principal principal) {
-        return eventRepository.findById(id).map(event -> {
-            User buyer = getOrCreateUser(principal);
-            Ticket ticket = Ticket.builder()
-                    .event(event)
-                    .user(buyer)
-                    .qrCode(UUID.randomUUID().toString())
-                    .build();
+   // @PostMapping("/{id}/buy")
+  //  public ResponseEntity<Ticket> buyTicket(@PathVariable Long id, Principal principal) {
+    //    return eventRepository.findById(id).map(event -> {
+      //      User buyer = getOrCreateUser(principal);
+        //    Ticket ticket = Ticket.builder()
+          //          .event(event)
+            //        .user(buyer)
+              //      .qrCode(UUID.randomUUID().toString())
+                //    .build();
 
-            Ticket savedTicket = ticketRepository.save(ticket);
+            //Ticket savedTicket = ticketRepository.save(ticket);
 
             // 🔥 ЖАҢА: Analytics жазу
-            Double price = event.getPrice() != null ? event.getPrice().doubleValue() : 0.0;
-            analyticsService.trackTicketSale(id, price);
+            //Double price = event.getPrice() != null ? event.getPrice().doubleValue() : 0.0;
+            //analyticsService.trackTicketSale(id, price);
 
-            return ResponseEntity.ok(savedTicket);
-        }).orElse(ResponseEntity.notFound().build());
-    }
+            //return ResponseEntity.ok(savedTicket);
+        //}).orElse(ResponseEntity.notFound().build());
+    //}
 
 
     @GetMapping("/tickets/my")
@@ -430,6 +439,16 @@ public class EventController {
 
         return ResponseEntity.ok(stats);
     }
+
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<Event>> getAllEventsPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return ResponseEntity.ok(eventRepository.findAll(pageable));
+    }
+
 
 
     @GetMapping("/my-organized")

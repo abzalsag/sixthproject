@@ -2,6 +2,7 @@ package com.example.sixthproject.entity;
 
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -50,4 +51,8 @@ public class Ticket {
 
         this.qrCode = "TUSA-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
+
+    @OneToOne(mappedBy = "ticket")
+    @JsonIgnore
+    private Payment payment;
 }

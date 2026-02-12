@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -79,5 +80,40 @@ public class TicketController {
                     return ResponseEntity.ok("Билет қабылданды ✅");
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    // QR кодты тексеру
+    @PostMapping("/validate/{qrCode}")
+    public ResponseEntity<?> validateTicket(@PathVariable String qrCode) {
+        Optional<Ticket> ticketOpt = ticketRepository.findByQrCode(qrCode);
+
+        if (ticketOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of(
+                    "valid", false,
+                    "message", "Билет табылмады"
+            ));
+        }
+
+        Ticket ticket = ticketOpt.get();
+
+        if (ticket.isUsed()) {
+            return ResponseEntity.status(400).body(Map.of(
+                    "valid", false,
+                    "message", "Билет қолданылған",
+                    "usedAt", ticket.getUsedAt()
+            ));
+        }
+
+        // Билетті қолданылған деп белгілеу
+        ticket.setUsed(true);
+        ticket.setUsedAt(LocalDateTime.now());
+        ticketRepository.save(ticket);
+
+        return ResponseEntity.ok(Map.of(
+                "valid", true,
+                "eventTitle", ticket.getEvent().getTitle(),
+                "userName", ticket.getUser().getFirstname(),
+                "eventDate", ticket.getEvent().getEventDate()
+        ));
     }
 }
