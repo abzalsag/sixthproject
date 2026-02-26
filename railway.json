@@ -6,8 +6,6 @@
   },
   "deploy": {
     "numReplicas": 1,
-    "startCommand": "java -jar app.jar",
-    "healthcheckPath": "/actuator/health",
     "restartPolicyType": "ON_FAILURE"
   }
 }
