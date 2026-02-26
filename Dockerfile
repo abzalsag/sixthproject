@@ -1,10 +1,10 @@
 # 1. Build stage - Gradle build
 FROM gradle:8.5-jdk17 AS builder
 WORKDIR /app
-COPY build.gradle settings.gradle ./
-COPY gradle ./gradle
-COPY src ./src
-COPY firebase-service-account.json ./
+COPY backend/build.gradle backend/settings.gradle ./
+COPY backend/gradle ./gradle
+COPY backend/src ./src
+COPY backend/firebase-service-account.json ./
 RUN gradle build -x test --no-daemon
 
 # 2. Production stage - Amazon Corretto 17

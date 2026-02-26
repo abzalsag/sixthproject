@@ -1,19 +1,52 @@
 version: '3.8'
 
 services:
-  # --- MinIO (Файл сақтау) ---
-  minio:
-    image: minio/minio
-    container_name: sixth-project-minio
+  # --- Backend (Spring Boot) ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sixth-project-backend
     ports:
-      - "9000:9000" # API port
-      - "9090:9090" # Console port (Браузерден кіру үшін)
+      - "8080:8080"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9090"
+      - SPRING_PROFILES_ACTIVE=prod
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/sixthproject
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MINIO_URL=http://minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+    depends_on:
+      - postgres
+      - redis
+      - minio
+
+  # --- Frontend (React + Nginx) ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sixth-project-frontend
+    ports:
+      - "3000:8080"
+    depends_on:
+      - backend
+
+  # --- PostgreSQL ---
+  postgres:
+    image: postgres:15-alpine
+    container_name: sixth-project-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: sixthproject
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     volumes:
-      - minio_data:/data
+      - postgres_data:/var/lib/postgresql/data
 
   # --- Redis (Кэш) ---
   redis:
@@ -22,5 +55,20 @@ services:
     ports:
       - "6379:6379"
 
+  # --- MinIO (Файл сақтау) ---
+  minio:
+    image: minio/minio
+    container_name: sixth-project-minio
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9090"
+    volumes:
+      - minio_data:/data
+
 volumes:
+  postgres_data:
   minio_data:
