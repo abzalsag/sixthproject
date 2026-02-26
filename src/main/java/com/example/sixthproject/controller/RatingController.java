@@ -38,7 +38,7 @@ import java.util.Optional;
             Event event = eventRepository.findById(eventId).orElseThrow();
 
             // Бұрын бағалаған ба?
-            Optional<Rating> existing = ratingRepository.findByEventAndUser(event, user);
+            Optional<Rating> existing = ratingRepository.findByUserAndEvent(user, event);
             if (existing.isPresent()) {
                 return ResponseEntity.status(400).body("Сіз бұл ивентті әлдеқашан бағаладыңыз");
             }
@@ -46,7 +46,7 @@ import java.util.Optional;
             Rating rating = Rating.builder()
                     .event(event)
                     .user(user)
-                    .stars((Integer) request.get("stars"))
+                    .rating((Integer) request.get("stars"))
                     .review((String) request.get("review"))
                     .build();
 
@@ -65,7 +65,7 @@ import java.util.Optional;
             List<Rating> ratings = ratingRepository.findByEvent(event);
 
             double average = ratings.stream()
-                    .mapToInt(Rating::getStars)
+                    .mapToInt(Rating::getRating)
                     .average()
                     .orElse(0.0);
 
@@ -78,7 +78,7 @@ import java.util.Optional;
 
         private void updateEventRating(Event event) {
             List<Rating> ratings = ratingRepository.findByEvent(event);
-            double avg = ratings.stream().mapToInt(Rating::getStars).average().orElse(0.0);
+            double avg = ratings.stream().mapToInt(Rating::getRating).average().orElse(0.0);
             event.setAverageRating(avg);
             eventRepository.save(event);
         }

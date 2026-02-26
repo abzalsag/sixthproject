@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +52,23 @@ public class UserService {
             currentUser.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
+
+
+
+
+
+        if (request.getFirstname() != null) currentUser.setFirstname(request.getFirstname());
+        if (request.getLastname() != null) currentUser.setLastname(request.getLastname());
+        if (request.getPassword() != null) currentUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        if (request.getCity() != null) currentUser.setCity(request.getCity());
+        if (request.getBio() != null) currentUser.setBio(request.getBio());
+        if (request.getIsPrivate() != null) currentUser.setPrivate(request.getIsPrivate());
+        if (request.getShowOnlineStatus() != null) currentUser.setShowOnlineStatus(request.getShowOnlineStatus());
+        if (request.getPushNotifications() != null) currentUser.setPushNotifications(request.getPushNotifications());
+        if (request.getEmailNotifications() != null) currentUser.setEmailNotifications(request.getEmailNotifications());
+        if (request.getInterests() != null) currentUser.setInterests(request.getInterests());
+
+        
         repository.save(currentUser);
     }
 }

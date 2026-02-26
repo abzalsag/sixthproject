@@ -2,10 +2,7 @@ package com.example.sixthproject.controller;
 
 import com.example.sixthproject.dto.BuyTicketRequest;
 import com.example.sixthproject.entity.*;
-import com.example.sixthproject.repository.CommentRepository;
-import com.example.sixthproject.repository.EventRepository;
-import com.example.sixthproject.repository.TicketRepository;
-import com.example.sixthproject.repository.UserRepository;
+import com.example.sixthproject.repository.*;
 import com.example.sixthproject.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -455,5 +452,76 @@ public class EventController {
     public ResponseEntity<List<Event>> getMyOrganizedEvents(Principal principal) {
         User user = getOrCreateUser(principal);
         return ResponseEntity.ok(eventRepository.findAllByOrganizerId(user.getId()));
+    }
+
+
+
+    @Autowired
+    private RatingRepository ratingRepository;
+
+    @PostMapping("/{id}/rate")
+    public ResponseEntity<?> rateEvent(
+            @PathVariable Long id,
+            @RequestBody Map<String, Integer> request,
+            Principal principal) {
+
+        return eventRepository.findById(id).map(event -> {
+            User user = getOrCreateUser(principal);
+            Integer ratingValue = request.get("rating");
+
+            // Валидация
+            if (ratingValue == null || ratingValue < 1 || ratingValue > 5) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Рейтинг 1-5 аралығында болуы керек"));
+            }
+
+            // Бұрынғы рейтингті тексеру
+            Optional<Rating> existingRating = ratingRepository
+                    .findByUserAndEvent(user, event);
+
+            Rating rating;
+            if (existingRating.isPresent()) {
+                // Рейтингті жаңарту
+                rating = existingRating.get();
+                rating.setRating(ratingValue);
+            } else {
+                // Жаңа рейтинг қосу
+                rating = Rating.builder()
+                        .user(user)
+                        .event(event)
+                        .rating(ratingValue)
+                        .build();
+            }
+
+            ratingRepository.save(rating);
+
+            // Орташа рейтингті есептеу
+            List<Rating> allRatings = ratingRepository.findByEvent(event);
+            Double avgRating = allRatings.stream()
+                    .mapToInt(Rating::getRating)
+                    .average()
+                    .orElse(0.0);
+
+            event.setAverageRating(avgRating);
+            eventRepository.save(event);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Рейтинг сәтті сақталды",
+                    "averageRating", avgRating,
+                    "totalRatings", allRatings.size()
+            ));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/ratings")
+    public ResponseEntity<?> getEventRatings(@PathVariable Long id) {
+        return eventRepository.findById(id).map(event -> {
+            List<Rating> ratings = ratingRepository.findByEvent(event);
+            return ResponseEntity.ok(Map.of(
+                    "averageRating", event.getAverageRating(),
+                    "totalRatings", ratings.size(),
+                    "ratings", ratings
+            ));
+        }).orElse(ResponseEntity.notFound().build());
     }
 }

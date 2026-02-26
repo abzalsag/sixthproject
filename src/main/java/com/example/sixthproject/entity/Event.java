@@ -103,4 +103,9 @@ public class Event {
             this.likes = 0;
         }
     }
+
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Rating> ratings = new ArrayList<>();
 }

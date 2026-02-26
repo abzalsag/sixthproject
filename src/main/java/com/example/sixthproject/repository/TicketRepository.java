@@ -1,5 +1,6 @@
 package com.example.sixthproject.repository;
 
+import com.example.sixthproject.entity.Event;
 import com.example.sixthproject.entity.Ticket;
 import com.example.sixthproject.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,4 +15,8 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     List<Ticket> findByUser(User user);
 
     List<Ticket> findByUser_Username(String username);
-}
+
+
+        List<Ticket> findByEvent(Event event);
+        // ... басқа методтар
+    }

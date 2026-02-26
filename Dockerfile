@@ -1,14 +1,22 @@
-# 1. Ескі OpenJDK орнына Amazon Corretto 17 аламыз (Бұл 100% жұмыс істейді)
-FROM amazoncorretto:17
+# 1. Build stage - Gradle build
+FROM gradle:8.5-jdk17 AS builder
+WORKDIR /app
+COPY build.gradle settings.gradle ./
+COPY gradle ./gradle
+COPY src ./src
+COPY firebase-service-account.json ./
+RUN gradle build -x test --no-daemon
 
-# 2. Жұмыс папкасы
+# 2. Production stage - Amazon Corretto 17
+FROM amazoncorretto:17-alpine
 WORKDIR /app
 
-# 3. Файлды көшіру
-COPY build/libs/*.jar app.jar
+# 3. JAR файлды көшіру
+COPY --from=builder /app/build/libs/*.jar app.jar
+COPY --from=builder /app/firebase-service-account.json ./
 
 # 4. Порт
 EXPOSE 8080
 
-# 5. Іске қосу
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# 5. Production profile-мен іске қосу
+ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]

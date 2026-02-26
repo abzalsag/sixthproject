@@ -5,12 +5,18 @@ import com.example.sixthproject.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final TicketRepository ticketRepository;
+    private final PushNotificationService pushService;
+
 
     // Жаңа жазылушы туралы хабарландыру
     public void createFollowNotification(User follower, User following) {
@@ -62,5 +68,38 @@ public class NotificationService {
                 .targetUrl("/chat")
                 .build();
         notificationRepository.save(notification);
+    }
+
+
+    public void notifyEventReminder(Event event) {
+        // Ивент басталуға 24 сағат қалғанда хабарландыру
+        List<Ticket> tickets = ticketRepository.findByEvent(event);
+
+        for (Ticket ticket : tickets) {
+            pushService.sendToUser(
+                    ticket.getUser(),
+                    "Ивент ертең! 📅",
+                    event.getTitle() + " ертең " + event.getEventDate().format(DateTimeFormatter.ofPattern("HH:mm")) + "-де басталады",
+                    event.getImageUrl()
+            );
+        }
+    }
+
+    public void notifyNewFollower(User follower, User followed) {
+        pushService.sendToUser(
+                followed,
+                "Жаңа жазылушы! 👤",
+                follower.getFirstname() + " сізге жазылды",
+                follower.getAvatarUrl()
+        );
+    }
+
+    public void notifyTicketPurchase(User organizer, Event event, User buyer) {
+        pushService.sendToUser(
+                organizer,
+                "Жаңа билет сатылды! 🎫",
+                buyer.getFirstname() + " \"" + event.getTitle() + "\" ивентіне билет алды",
+                event.getImageUrl()
+        );
     }
 }

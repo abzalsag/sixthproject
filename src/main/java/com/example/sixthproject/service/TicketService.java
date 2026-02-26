@@ -59,4 +59,42 @@ public class TicketService {
 
         return "Билет сәтті алынды! Чатқа қосылдыңыз. QR: " + ticket.getQrCode();
     }
+
+
+    @Transactional
+    public String refundTicket(Long ticketId, Long userId) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Билет табылмады!"));
+
+        if (!ticket.getUser().getId().equals(userId)) {
+            return "Бұл сіздің билетіңіз емес!";
+        }
+
+        if (ticket.isUsed()) {
+            return "Пайдаланылған билетті қайтаруға болмайды!";
+        }
+
+        Event event = ticket.getEvent();
+
+        // Ивент басталуға 24 сағаттан кем қалса, қайтаруға болмайды
+        if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(24))) {
+            return "Ивент басталуға 24 сағаттан кем қалды, қайтаруға болмайды!";
+        }
+
+        // Билет санын қайтару
+        event.setTotalTickets(event.getTotalTickets() + 1);
+        eventRepository.save(event);
+
+        // Чаттан шығару
+        if (event.getChat() != null) {
+            Chat eventChat = event.getChat();
+            eventChat.getParticipants().remove(ticket.getUser());
+            chatRepository.save(eventChat);
+        }
+
+        // Билетті өшіру
+        ticketRepository.delete(ticket);
+
+        return "Билет сәтті қайтарылды! Ақша 3-5 жұмыс күні ішінде қайтарылады.";
+    }
 }

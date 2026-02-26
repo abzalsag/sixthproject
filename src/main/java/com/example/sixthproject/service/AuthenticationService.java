@@ -33,6 +33,7 @@ public class AuthenticationService {
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)
+                .accountNonLocked(true)   // ← Lombok @Builder boolean primitive-ті false деп береді!
                 .build();
 
         repository.save(user);
