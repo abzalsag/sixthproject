@@ -11,7 +11,7 @@ FROM amazoncorretto:17-alpine
 WORKDIR /app
 
 # 3. JAR файлды көшіру
-COPY --from=builder /app/build/libs/*.jar app.jar
+COPY --from=builder /app/build/libs/app.jar app.jar
 
 # 4. Порт
 EXPOSE 8080

@@ -66,8 +66,12 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-// Plain JAR-ды өшіру — тек Boot JAR жасалады
-// Dockerfile-дегі COPY *.jar дұрыс жұмыс істеуі үшін
+// Boot JAR атауын тіркеу — Dockerfile-де нақты ат қолданылады
+bootJar {
+    archiveFileName = 'app.jar'
+}
+
+// Plain JAR-ды өшіру
 jar {
     enabled = false
 }
