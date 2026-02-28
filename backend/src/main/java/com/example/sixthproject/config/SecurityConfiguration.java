@@ -30,6 +30,9 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // Health check — Cloud Run / Railway
+                        .requestMatchers("/", "/health").permitAll()
+
                         .requestMatchers("/api/v1/auth/**").permitAll()
 
 
