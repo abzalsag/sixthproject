@@ -65,3 +65,9 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+// Plain JAR-ды өшіру — тек Boot JAR жасалады
+// Dockerfile-дегі COPY *.jar дұрыс жұмыс істеуі үшін
+jar {
+    enabled = false
+}
