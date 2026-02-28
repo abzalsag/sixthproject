@@ -85,7 +85,7 @@ export const uploadAvatar = (file) => {
 
 /** Аватар URL */
 export const getAvatarUrl = (filename) =>
-    filename ? `/api/v1/users/avatar/${filename}` : null
+    filename ? `${BASE_URL}/v1/users/avatar/${filename}` : null
 
 /** Пайдаланушы іздеу */
 export const searchUsers = (query) =>

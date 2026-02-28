@@ -35,3 +35,11 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Sensitive files ###
+backend/firebase-service-account.json
+backend/uploads/
+
+### Environment ###
+.env
+.env.*
