@@ -8,20 +8,16 @@ export default defineConfig({
     tailwindcss(),
   ],
 
-  /**
-   * PROXY — Spring Boot бекенді үшін CORS мәселесін шешеді.
-   * Браузерден /api/* деп шыққан барлық сұраныс
-   * автоматты түрде http://localhost:8080/api/* адресіне жіберіледі.
-   *
-   * Spring Boot порты өзгерсе — осы жерден ғана өзгертіңіз.
-   */
   server: {
+    // Желідегі барлық устройствоға ашады (телефон, планшет)
+    host: '0.0.0.0',
+    port: 5173,
+
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
-        // rewrite: (path) => path.replace(/^\/api/, '/api'), // path сақталады
       },
     },
   },

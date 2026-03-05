@@ -21,15 +21,16 @@ export function usePosts(mode = 'all') {
             // Бэкенд Event объектін береді — frontend форматқа кеіру
             const mapped = (data || []).map(ev => ({
                 id: ev.id,
-                user: ev.organizer?.username || ev.organizer?.firstname || 'user',
-                handle: '@' + (ev.organizer?.username || 'user'),
+                // Post entity: user, Event entity: organizer
+                user: ev.user?.username || ev.organizer?.username || ev.organizer?.firstname || 'user',
+                handle: '@' + (ev.user?.username || ev.organizer?.username || 'user'),
                 time: formatTime(ev.createdAt),
-                likes: ev.likes || 0,
+                likes: ev.likesCount ?? ev.likes ?? 0,
                 comments: ev.comments?.length || 0,
-                caption: ev.description || ev.title || '',
+                caption: ev.caption || ev.description || ev.title || '',
                 tag: ev.category || 'ПОСТ',
                 emoji: '📷',
-                shade: '#e0e0e0',
+                shade: '#f0f0f0',
                 imageUrl: ev.imageUrl || null,
                 raw: ev,
             }))

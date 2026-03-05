@@ -127,16 +127,32 @@ function PostCard({ p, delay = 0 }) {
                 <span className="tag tag-filled tag-sm">{p.tag}</span>
             </div>
 
+            {/* ── Media zone ── */}
             <div style={{
-                width: '100%', aspectRatio: '1', background: p.shade,
+                width: '100%', aspectRatio: '1', background: p.shade || '#e0e0e0',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 80, borderTop: '2px solid #000', borderBottom: '2px solid #000',
+                overflow: 'hidden', position: 'relative',
                 transition: 'opacity 0.12s', cursor: 'pointer',
             }}
                 onPointerDown={e => { e.currentTarget.style.opacity = '0.88' }}
                 onPointerUp={e => { e.currentTarget.style.opacity = '1' }}
                 onPointerLeave={e => { e.currentTarget.style.opacity = '1' }}
-            >{p.emoji}</div>
+            >
+                {p.imageUrl ? (
+                    <img
+                        src={p.imageUrl}
+                        alt={p.caption || 'post'}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
+                    />
+                ) : null}
+                <div style={{
+                    display: p.imageUrl ? 'none' : 'flex',
+                    width: '100%', height: '100%',
+                    alignItems: 'center', justifyContent: 'center', fontSize: 80,
+                }}>{p.emoji}</div>
+            </div>
 
             <div style={{ padding: '12px 20px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 10 }}>

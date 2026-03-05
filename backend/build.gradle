@@ -70,3 +70,13 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+// Boot JAR атауын тіркеу — Dockerfile-де нақты ат қолданылады
+bootJar {
+    archiveFileName = 'app.jar'
+}
+
+// Plain JAR-ды өшіру
+jar {
+    enabled = false
+}

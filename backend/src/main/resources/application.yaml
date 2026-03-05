@@ -1,12 +1,17 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   address: 0.0.0.0
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/sixthproject
-    username: postgres
-    password: postgres
+    # Railway: JDBC_DATABASE_URL немесе жергілікті localhost
+    # Railway панелінде: Variables → Add → JDBC_DATABASE_URL = jdbc:postgresql://...
+    url: ${JDBC_DATABASE_URL:${DATABASE_URL:jdbc:postgresql://localhost:5432/sixthproject}}
+    username: ${PGUSER:${DB_USERNAME:postgres}}
+    password: ${PGPASSWORD:${DB_PASSWORD:postgres}}
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 5
 
   jpa:
     hibernate:
@@ -25,7 +30,7 @@ spring:
       max-file-size: 20MB
       max-request-size: 20MB
 
-  # Redis — автоматты қосылмасын (жоқ болса ignore)
+  # Redis — өшірілген
   data:
     redis:
       host: localhost
@@ -38,8 +43,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: abzalsag@gmail.com
-    password: joauffbobmvbdcgr
+    username: ${MAIL_USERNAME:abzalsag@gmail.com}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -48,7 +53,7 @@ spring:
             enable: true
             required: true
 
-# MinIO — өшірілген (жергілікті файл жүйесі қолданылады)
+# MinIO — өшірілген (жергілікті файл жүйесі)
 minio:
   enabled: false
   url: http://localhost:9000
@@ -56,9 +61,14 @@ minio:
   secret-key: minioadmin
   bucket-name: images
 
-# Жергілікті файл жүктеу қалтасы
+# Жергілікті файл жүктеу
 app:
-  upload-dir: uploads
+  upload-dir: ${UPLOAD_DIR:uploads}
+
+# JWT
+jwt:
+  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  expiration: 86400000
 
 logging:
   level:
@@ -69,10 +79,10 @@ logging:
 
 stripe:
   api:
-    key: sk_test_YOUR_KEY
+    key: ${STRIPE_KEY:sk_test_YOUR_KEY}
   webhook:
-    secret: whsec_YOUR_WEBHOOK_SECRET
+    secret: ${STRIPE_WEBHOOK:whsec_YOUR_WEBHOOK_SECRET}
   currency: KZT
 
 firebase:
-  service-account-path: firebase-service-account.json
+  service-account-path: ${FIREBASE_SA_PATH:firebase-service-account.json}
