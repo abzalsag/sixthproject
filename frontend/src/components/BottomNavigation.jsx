@@ -66,7 +66,7 @@ const LABELS = {
     profile: 'Profile',
 }
 
-export default function BottomNavigation({ current, onChange }) {
+export default function BottomNavigation({ current, onChange, dark, onDarkToggle }) {
     return (
         <nav className="bottom-nav">
 
@@ -99,25 +99,43 @@ export default function BottomNavigation({ current, onChange }) {
                     }}
                 >
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="square">
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
                 </div>
                 <span className="nav-create-label">{LABELS['create']}</span>
             </button>
 
-            {/* ── EXPLORE & PROFILE ── */}
-            {['explore', 'profile'].map(id => (
-                <button
-                    key={id}
-                    onClick={() => onChange(id)}
-                    className={`nav-btn${current === id ? ' active' : ''}`}
-                    aria-label={LABELS[id]}
-                >
-                    {current === id ? ICONS[id].filled : ICONS[id].outline}
-                    <span className="nav-btn-label">{LABELS[id]}</span>
-                </button>
-            ))}
+            {/* ── EXPLORE ── */}
+            <button
+                onClick={() => onChange('explore')}
+                className={`nav-btn${current === 'explore' ? ' active' : ''}`}
+                aria-label="Explore"
+            >
+                {current === 'explore' ? ICONS.explore.filled : ICONS.explore.outline}
+                <span className="nav-btn-label">Explore</span>
+            </button>
+
+            {/* ── DARK MODE toggle (Profile орнына) ── */}
+            <button
+                onClick={onDarkToggle}
+                className="nav-btn"
+                aria-label={dark ? 'Light mode' : 'Dark mode'}
+                style={{ color: dark ? '#ffd700' : 'var(--text-muted)' }}
+            >
+                {dark ? (
+                    <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+                    </svg>
+                ) : (
+                    <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                    </svg>
+                )}
+                <span className="nav-btn-label">{dark ? 'Жарық' : 'Күн/Түн'}</span>
+            </button>
 
         </nav>
     )

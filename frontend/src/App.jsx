@@ -7,12 +7,13 @@ import Create from './pages/Create'
 import Explore from './pages/Explore'
 import Profile from './pages/Profile'
 import { isLoggedIn, logout } from './services/api'
+import { useDarkMode } from './hooks/useDarkMode'
 import './index.css'
 
 /* ═══════════════════════════════════════════
    DESKTOP SIDEBAR NAVIGATION
    ═══════════════════════════════════════════ */
-function DesktopSidebar({ current, onChange, onLogout, collapsed, onToggle }) {
+function DesktopSidebar({ current, onChange, onLogout, collapsed, onToggle, dark, onDarkToggle }) {
 
   const navItems = [
     {
@@ -122,13 +123,40 @@ function DesktopSidebar({ current, onChange, onLogout, collapsed, onToggle }) {
 
       {/* ── Footer ── */}
       <div className="sidebar-footer">
-        {/* TUSA version badge */}
+        {/* Dark mode toggle */}
+        <button
+          className="sidebar-nav-item"
+          onClick={onDarkToggle}
+          title={dark ? 'Жарық режим' : 'Қараңғы режим'}
+          style={{ color: dark ? '#ffd700' : '#666' }}
+        >
+          <span className="sidebar-nav-icon">
+            {dark ? (
+              // Sun icon
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+            ) : (
+              // Moon icon
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+              </svg>
+            )}
+          </span>
+          {!collapsed && <span className="sidebar-nav-label">{dark ? 'Жарық' : 'Қараңғы'}</span>}
+        </button>
+
+        {/* Version badge */}
         {!collapsed && (
           <div style={{
             padding: '8px 20px',
             fontFamily: "'Space Mono',monospace",
             fontSize: 8,
-            color: '#ccc',
+            color: 'var(--text-muted)',
             letterSpacing: '0.06em',
             textTransform: 'uppercase',
           }}>
@@ -140,7 +168,7 @@ function DesktopSidebar({ current, onChange, onLogout, collapsed, onToggle }) {
           onClick={onLogout}
           title={collapsed ? 'Шығу' : ''}
           style={{ color: '#999' }}
-          onPointerDown={e => { e.currentTarget.style.background = '#f5f5f5' }}
+          onPointerDown={e => { e.currentTarget.style.background = 'var(--surface-hover)' }}
           onPointerUp={e => { e.currentTarget.style.background = '' }}
           onPointerLeave={e => { e.currentTarget.style.background = '' }}
         >
@@ -166,6 +194,7 @@ export default function App() {
   const [page, setPage] = useState('home')
   const [authed, setAuthed] = useState(isLoggedIn())
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [dark, setDark] = useDarkMode()
 
   const handleAuthSuccess = () => {
     setAuthed(true)
@@ -205,6 +234,8 @@ export default function App() {
           onLogout={handleLogout}
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(c => !c)}
+          dark={dark}
+          onDarkToggle={() => setDark(d => !d)}
         />
         <main
           className="app-desktop-main"
@@ -223,7 +254,7 @@ export default function App() {
         <div className="page-content">
           {renderPage()}
         </div>
-        <BottomNavigation current={page} onChange={setPage} />
+        <BottomNavigation current={page} onChange={setPage} dark={dark} onDarkToggle={() => setDark(d => !d)} />
       </div>
 
     </div>
