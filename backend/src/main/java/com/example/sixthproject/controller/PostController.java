@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 @RestController
-@RequestMapping("/posts")
+@RequestMapping("/api/posts")
 @RequiredArgsConstructor
 public class PostController {
 
@@ -27,11 +27,11 @@ public class PostController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Post> createPost(
             @RequestParam("caption") String caption,
-            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "file", required = false) MultipartFile file,
             Principal principal
     ) {
         if (principal == null) {
-            throw new RuntimeException("Сіз жүйеге кірмегенсіз!");
+            return ResponseEntity.status(401).build();
         }
         Post post = postService.createPost(principal.getName(), caption, file);
         return ResponseEntity.ok(post);
@@ -76,5 +76,18 @@ public class PostController {
     @GetMapping("/feed")
     public ResponseEntity<List<Post>> getFeed(Principal principal) {
         return ResponseEntity.ok(postService.getFeedPosts(principal.getName()));
+    }
+
+    /** Пайдаланушы посттары — GET /api/posts/user/{userId} */
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Post>> getUserPosts(@PathVariable Long userId) {
+        try {
+            List<Post> posts = postRepository.findAll().stream()
+                    .filter(p -> p.getUser() != null && p.getUser().getId().equals(userId))
+                    .collect(java.util.stream.Collectors.toList());
+            return ResponseEntity.ok(posts);
+        } catch (Exception e) {
+            return ResponseEntity.ok(java.util.Collections.emptyList());
+        }
     }
 }

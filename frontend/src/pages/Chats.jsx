@@ -14,20 +14,46 @@ const pressBtn = {
 
 /* ── Chat Window — real messages ── */
 function ChatWindow({ dm, currentUsername, onClose }) {
-    const { messages, send } = useChatMessages(dm.raw?.id || null)
-    const [input, setInput] = useState('')
-
-    // Если нет реального chatId — падаем на начальный mock
-    const displayMsgs = messages.length > 0 ? messages : [
+    const chatId = dm.raw?.id || null
+    const { messages: backendMsgs, send: backendSend } = useChatMessages(chatId)
+    const [localMsgs, setLocalMsgs] = useState([
         { id: 1, from: 'them', text: 'Сәлем! Ивентке барасың ба?' },
         { id: 2, from: 'me', text: 'Иә! Fabric Night-қа барамын 🖤' },
-        { id: 3, from: 'them', text: dm.last },
-    ]
+        { id: 3, from: 'them', text: dm.last || '...' },
+    ])
+    const [input, setInput] = useState('')
+    const [sending, setSending] = useState(false)
+    const msgEndRef = useState(null)[0]
 
-    const doSend = () => {
+    // Нақты backend messages-ті me/them деп белгілейміз
+    const displayMsgs = chatId && backendMsgs.length > 0
+        ? backendMsgs.map(m => ({
+            ...m,
+            from: m.from === currentUsername ? 'me' : 'them'
+        }))
+        : localMsgs
+
+    const doSend = async () => {
         if (!input.trim()) return
-        send(input.trim())
+        const text = input.trim()
         setInput('')
+        setSending(true)
+
+        if (chatId) {
+            // Нақты backend-ке жіберу
+            await backendSend(text)
+        } else {
+            // Mock — жергілікті ғана
+            setLocalMsgs(prev => [...prev, { id: Date.now(), from: 'me', text }])
+            // Жалған жауап (2 секундтан кейін)
+            setTimeout(() => {
+                setLocalMsgs(prev => [...prev, {
+                    id: Date.now() + 1, from: 'them',
+                    text: ['👍', 'Түсіндім!', 'Окей, мақұл!', 'Болады 🎉'][Math.floor(Math.random() * 4)]
+                }])
+            }, 1500)
+        }
+        setSending(false)
     }
 
     return (
@@ -65,20 +91,9 @@ function ChatWindow({ dm, currentUsername, onClose }) {
                         <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 10, color: '#888' }}>{dm.handle}</div>
                     </div>
                 </div>
-                <button style={{
-                    border: '2px solid #000', background: '#fff',
-                    minWidth: 40, minHeight: 40,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', boxShadow: '2px 2px 0 #000',
-                    transition: 'transform 0.1s, box-shadow 0.1s',
-                }}
-                    onPointerDown={e => { e.currentTarget.style.transform = 'translate(2px,2px)'; e.currentTarget.style.boxShadow = 'none' }}
-                    onPointerUp={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '2px 2px 0 #000' }}
-                >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2">
-                        <circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />
-                    </svg>
-                </button>
+                <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 9, color: chatId ? '#000' : '#bbb', letterSpacing: '0.06em' }}>
+                    {chatId ? '✓ БЕКЕНД' : '○ DEMO'}
+                </div>
             </div>
 
             {/* Messages */}
@@ -89,8 +104,8 @@ function ChatWindow({ dm, currentUsername, onClose }) {
                 background: '#f8f8f8',
                 WebkitOverflowScrolling: 'touch',
             }}>
-                {displayMsgs.map(m => (
-                    <div key={m.id} className="fade-up" style={{
+                {displayMsgs.map((m, i) => (
+                    <div key={m.id || i} className="fade-up" style={{
                         display: 'flex',
                         justifyContent: m.from === 'me' ? 'flex-end' : 'flex-start',
                     }}>
@@ -120,18 +135,19 @@ function ChatWindow({ dm, currentUsername, onClose }) {
                 />
                 <button
                     onClick={doSend}
+                    disabled={sending || !input.trim()}
                     style={{
-                        background: '#000', color: '#fff',
+                        background: input.trim() ? '#000' : '#888', color: '#fff',
                         border: 'none', borderLeft: '2px solid #000',
                         minHeight: 54, padding: '0 22px',
                         fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: 18,
-                        cursor: 'pointer',
+                        cursor: input.trim() ? 'pointer' : 'default',
                         transition: 'transform 0.1s, background 0.12s',
                     }}
-                    onPointerDown={e => { e.currentTarget.style.transform = 'scale(0.9)'; e.currentTarget.style.background = '#222' }}
-                    onPointerUp={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.background = '#000' }}
-                    onPointerLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.background = '#000' }}
-                >→</button>
+                    onPointerDown={e => { if (input.trim()) e.currentTarget.style.transform = 'scale(0.9)' }}
+                    onPointerUp={e => { e.currentTarget.style.transform = '' }}
+                    onPointerLeave={e => { e.currentTarget.style.transform = '' }}
+                >{sending ? '⟳' : '→'}</button>
             </div>
         </div>
     )

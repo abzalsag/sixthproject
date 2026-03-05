@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/tickets")
+@RequestMapping("/api/events/tickets")
 public class TicketController {
 
     @Autowired
@@ -30,25 +30,35 @@ public class TicketController {
     private TicketService ticketService; // 🔥 ЖАҢА
 
     @PostMapping("/buy")
-    public String buyTicket(@RequestBody Map<String, Object> data) {
-        String username = (String) data.get("username");
-        Long eventId = Long.parseLong(String.valueOf(data.get("eventId")));
+    public ResponseEntity<?> buyTicket(@RequestBody Map<String, Object> data, java.security.Principal principal) {
+        try {
+            Long eventId = Long.parseLong(String.valueOf(data.get("eventId")));
+            // Principal арқылы ағымдағы пайдаланушыны аламыз (JWT-дан)
+            String username = principal != null ? principal.getName() : (String) data.get("username");
 
-        User user = userRepository.findByEmail(username).orElse(null);
+            User user = userRepository.findByUsername(username)
+                    .orElse(userRepository.findByEmail(username).orElse(null));
 
-        if (user != null) {
+            if (user == null) {
+                return ResponseEntity.status(404).body("Қате: Қолданушы табылмады.");
+            }
+
             BuyTicketRequest request = new BuyTicketRequest();
             request.setUserId(user.getId());
             request.setEventId(eventId);
 
-            return ticketService.buyTicket(request); // 🔥 Service қолдану
+            String result = ticketService.buyTicket(request);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body("Қате: " + e.getMessage());
         }
-        return "Қате: Қолданушы табылмады.";
     }
 
-    @GetMapping("/my-tickets/{username}")
-    public List<Ticket> getMyTickets(@PathVariable String username) {
-        return ticketRepository.findByUser_Username(username);
+    @GetMapping("/my")
+    public ResponseEntity<List<Ticket>> getMyTickets(java.security.Principal principal) {
+        String username = principal.getName();
+        List<Ticket> tickets = ticketRepository.findByUser_Username(username);
+        return ResponseEntity.ok(tickets);
     }
 
     // Билетті тексеру (QR код бойынша)

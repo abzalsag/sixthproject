@@ -90,11 +90,13 @@ public class User implements UserDetails {
     private Set<User> followers = new HashSet<>();
 
     @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("followersCount")
     public int getFollowersCount() {
         return followers == null ? 0 : followers.size();
     }
 
     @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("followingCount")
     public int getFollowingCount() {
         return following == null ? 0 : following.size();
     }

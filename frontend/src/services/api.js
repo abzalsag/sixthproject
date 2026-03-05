@@ -148,8 +148,8 @@ export const getFeedPosts = () =>
 
 export const createPost = (caption, file) => {
     const fd = new FormData()
-    fd.append('caption', caption)
-    fd.append('file', file)
+    fd.append('caption', caption || '')
+    if (file) fd.append('file', file)
     return api.post('/posts', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
     }).then(r => r.data)
@@ -214,5 +214,32 @@ export const createStory = (file) => {
    ════════════════════════════════ */
 export const getNotifications = () =>
     api.get('/notifications').then(r => r.data).catch(() => [])
+
+/* ════════════════════════════════
+   COMMENTS  /api/comments/*
+   ════════════════════════════════ */
+export const getComments = (postId) =>
+    api.get(`/comments/post/${postId}`).then(r => r.data).catch(() => [])
+
+export const addComment = (postId, content) =>
+    api.post(`/comments/${postId}`, { content }).then(r => r.data)
+
+export const deleteComment = (commentId) =>
+    api.delete(`/comments/${commentId}`).then(r => r.data)
+
+/* ════════════════════════════════
+   FOLLOW  /api/v1/users/*
+   ════════════════════════════════ */
+export const followUser = (userId) =>
+    api.post(`/v1/users/${userId}/follow`).then(r => r.data)
+
+export const unfollowUser = (userId) =>
+    api.post(`/v1/users/${userId}/follow`).then(r => r.data)  // toggle
+
+export const getFollowers = (userId) =>
+    api.get(`/v1/users/${userId}/followers-list`).then(r => r.data).catch(() => [])
+
+export const getFollowing = (userId) =>
+    api.get(`/v1/users/${userId}/following-list`).then(r => r.data).catch(() => [])
 
 export default api

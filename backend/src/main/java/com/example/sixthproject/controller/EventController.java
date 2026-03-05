@@ -273,15 +273,6 @@ public class EventController {
     //}
 
 
-    @GetMapping("/tickets/my")
-    public ResponseEntity<List<Ticket>> getMyTickets(Principal principal) {
-        User currentUser = getOrCreateUser(principal);
-        List<Ticket> myTickets = ticketRepository.findAll().stream()
-                .filter(t -> t.getUser().getId().equals(currentUser.getId()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(myTickets);
-    }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<Event> getEventById(@PathVariable Long id) {

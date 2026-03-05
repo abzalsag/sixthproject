@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { PROFILE_POSTS, POLAROIDS } from '../data/mockData'
 import { useProfile } from '../hooks/useProfile'
 
@@ -335,23 +335,87 @@ function EditModal({ user, onClose, onSave }) {
     )
 }
 
+/* ── Followers/Following Modal ── */
+function FollowListModal({ userId, type, onClose }) {
+    const [users, setUsers] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const load = async () => {
+            try {
+                const { getFollowers, getFollowing } = await import('../services/api')
+                const data = type === 'followers' ? await getFollowers(userId) : await getFollowing(userId)
+                setUsers(data || [])
+            } catch { setUsers([]) }
+            finally { setLoading(false) }
+        }
+        load()
+    }, [userId, type])
+
+    return (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+            <div className="modal-sheet slide-up" style={{ maxHeight: '70dvh', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0' }}>
+                    <div style={{ width: 40, height: 4, background: '#000' }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '2px solid #000' }}>
+                    <div style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: 16 }}>
+                        {type === 'followers' ? '👥 ЖАЗЫЛУШЫЛАР' : '➡️ ЖАЗЫЛҒАНДАР'}
+                    </div>
+                    <button style={{ border: '2px solid #000', background: '#fff', width: 40, height: 40, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '2px 2px 0 #000', fontSize: 16 }}
+                        onClick={onClose}>✕</button>
+                </div>
+                <div style={{ overflowY: 'auto', flex: 1 }}>
+                    {loading ? (
+                        [1, 2, 3].map(n => (
+                            <div key={n} style={{ display: 'flex', gap: 12, padding: '14px 20px', borderBottom: '1.5px solid #e0e0e0', alignItems: 'center' }}>
+                                <div className="skeleton" style={{ width: 44, height: 44, flexShrink: 0 }} />
+                                <div style={{ flex: 1 }}>
+                                    <div className="skeleton" style={{ height: 14, width: '40%', marginBottom: 6 }} />
+                                    <div className="skeleton" style={{ height: 11, width: '25%' }} />
+                                </div>
+                            </div>
+                        ))
+                    ) : users.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '40px 20px', fontFamily: "'Space Mono',monospace", fontSize: 12, color: '#888' }}>
+                            {type === 'followers' ? 'Жазылушы жоқ әлі' : 'Ешкімге жазылмадыңыз әлі'}
+                        </div>
+                    ) : users.map(u => (
+                        <div key={u.id} style={{ display: 'flex', gap: 12, padding: '12px 20px', borderBottom: '1.5px solid #e0e0e0', alignItems: 'center' }}>
+                            <div style={{ width: 44, height: 44, background: '#000', border: '2px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#fff', flexShrink: 0, boxShadow: '3px 3px 0 #000' }}>
+                                {(u.firstname || u.username || '?')[0]?.toUpperCase()}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: 14 }}>
+                                    {u.firstname ? `${u.firstname} ${u.lastname || ''}`.trim() : u.username}
+                                </div>
+                                <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 11, color: '#888' }}>@{u.username}</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
+}
+
 /* ══════ PROFILE PAGE ══════ */
 export default function Profile() {
     const [tab, setTab] = useState('memories')
     const [editOpen, setEditOpen] = useState(false)
+    const [followModal, setFollowModal] = useState(null) // 'followers' | 'following' | null
     const { user, loading, refetch } = useProfile()
 
-    // Нақты немесе fallback деректер
     const name = user ? `${user.firstname || ''} ${user.lastname || ''}`.trim() || user.username : '...'
     const username = user?.username || '...'
     const bio = user?.bio || '🎧 Алматы рейв культурасы · 🎟️ ивент коллекционері'
-    const followers = user?.followersCount ?? '—'
-    const following = user?.followingCount ?? '—'
+    const followers = user?.followersCount ?? 0
+    const following = user?.followingCount ?? 0
 
     const STATS = [
-        { label: 'Посттар', value: loading ? '—' : '47' },
-        { label: 'Жазылушы', value: loading ? '—' : followers },
-        { label: 'Жазылған', value: loading ? '—' : following },
+        { label: 'Посттар', value: loading ? '—' : (user?.postsCount ?? '—') },
+        { label: 'Жазылушы', value: loading ? '—' : followers, action: () => user && setFollowModal('followers') },
+        { label: 'Жазылған', value: loading ? '—' : following, action: () => user && setFollowModal('following') },
     ]
 
     return (
@@ -370,7 +434,7 @@ export default function Profile() {
                 {/* ── Profile Header ── */}
                 <div style={{ padding: '20px 20px 0' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 18 }}>
-                        {/* Avatar with border frame */}
+                        {/* Avatar */}
                         <div style={{ position: 'relative' }}>
                             <div style={{
                                 width: 82, height: 82,
@@ -388,7 +452,11 @@ export default function Profile() {
                                 onPointerDown={e => { e.currentTarget.style.transform = 'scale(0.93)' }}
                                 onPointerUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
                                 onPointerLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
-                            >🖤</div>
+                            >
+                                {user?.avatarUrl
+                                    ? <img src={user.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    : (user?.firstname || '🖤')[0]?.toUpperCase()}
+                            </div>
                             <div style={{
                                 position: 'absolute', bottom: -4, right: -4,
                                 width: 24, height: 24,
@@ -396,10 +464,8 @@ export default function Profile() {
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 fontSize: 14, color: '#fff', cursor: 'pointer',
                                 boxShadow: '2px 2px 0 #000',
-                                transition: 'transform 0.1s',
                             }}
-                                onPointerDown={e => { e.currentTarget.style.transform = 'scale(0.85)' }}
-                                onPointerUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
+                                onClick={() => setEditOpen(true)}
                             >+</div>
                         </div>
 
@@ -409,15 +475,17 @@ export default function Profile() {
                                 <div key={s.label} style={{
                                     flex: 1, textAlign: 'center',
                                     borderLeft: i > 0 ? '1.5px solid #e0e0e0' : 'none',
-                                    cursor: 'pointer',
+                                    cursor: s.action ? 'pointer' : 'default',
                                     transition: 'transform 0.12s',
                                 }}
-                                    onPointerDown={e => { e.currentTarget.style.transform = 'scale(0.92)' }}
+                                    onClick={s.action}
+                                    onPointerDown={e => { if (s.action) e.currentTarget.style.transform = 'scale(0.92)' }}
                                     onPointerUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
                                     onPointerLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
                                 >
                                     <div style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: 19, letterSpacing: '-0.02em' }}>{s.value}</div>
                                     <div className="t-label" style={{ fontSize: 8.5, marginTop: 2 }}>{s.label}</div>
+                                    {s.action && <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 7, color: '#bbb', marginTop: 1 }}>↑ тізім</div>}
                                 </div>
                             ))}
                         </div>
@@ -500,6 +568,13 @@ export default function Profile() {
             </div>
 
             {editOpen && <EditModal user={user} onClose={() => setEditOpen(false)} onSave={refetch} />}
+            {followModal && (
+                <FollowListModal
+                    userId={user?.id}
+                    type={followModal}
+                    onClose={() => setFollowModal(null)}
+                />
+            )}
         </>
     )
 }

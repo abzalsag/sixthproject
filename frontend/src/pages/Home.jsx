@@ -73,6 +73,43 @@ function StoryBubble({ s }) {
 /* ── Post Card ── */
 function PostCard({ p, delay = 0 }) {
     const [liked, setLiked] = useState(false)
+    const [showComments, setShowComments] = useState(false)
+    const [comments, setComments] = useState([])
+    const [commentText, setCommentText] = useState('')
+    const [loadingCmts, setLoadingCmts] = useState(false)
+    const [sendingCmt, setSendingCmt] = useState(false)
+
+    const loadComments = async () => {
+        if (!p.id || typeof p.id !== 'number') return
+        setLoadingCmts(true)
+        try {
+            const { getComments } = await import('../services/api')
+            const data = await getComments(p.id)
+            setComments(data || [])
+        } catch { setComments([]) }
+        finally { setLoadingCmts(false) }
+    }
+
+    const toggleComments = () => {
+        if (!showComments) loadComments()
+        setShowComments(v => !v)
+    }
+
+    const submitComment = async () => {
+        if (!commentText.trim() || !p.id) return
+        setSendingCmt(true)
+        try {
+            const { addComment } = await import('../services/api')
+            const newCmt = await addComment(p.id, commentText.trim())
+            setComments(prev => [...prev, newCmt])
+            setCommentText('')
+        } catch (e) {
+            // offline fallback — жергілікті қосамыз
+            setComments(prev => [...prev, { id: Date.now(), content: commentText.trim(), user: { username: 'мен' } }])
+            setCommentText('')
+        } finally { setSendingCmt(false) }
+    }
+
     return (
         <article className="fade-up" style={{ borderBottom: '2px solid #000', animationDelay: `${delay}s` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px' }}>
@@ -111,11 +148,12 @@ function PostCard({ p, delay = 0 }) {
                             {liked ? p.likes + 1 : p.likes}
                         </span>
                     </button>
-                    <button className="action-btn">
-                        <svg viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="#000" strokeWidth="2">
+                    {/* 💬 Коммент батырмасы */}
+                    <button className="action-btn" onClick={toggleComments} style={{ color: showComments ? '#000' : '#666' }}>
+                        <svg viewBox="0 0 24 24" width={22} height={22} fill={showComments ? '#000' : 'none'} stroke="currentColor" strokeWidth="2">
                             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                         </svg>
-                        <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 12, fontWeight: 700 }}>{p.comments}</span>
+                        <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 12, fontWeight: 700 }}>{(p.comments || 0) + comments.filter(c => c.id > 1000000000).length}</span>
                     </button>
                     <button className="action-btn" style={{ marginLeft: 'auto' }}>
                         <svg viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="#000" strokeWidth="2">
@@ -127,6 +165,51 @@ function PostCard({ p, delay = 0 }) {
                     <strong style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700 }}>{p.user}</strong>&nbsp;{p.caption}
                 </p>
             </div>
+
+            {/* 💬 COMMENT SECTION */}
+            {showComments && (
+                <div className="fade-up" style={{ borderTop: '2px solid #000', background: '#fafafa' }}>
+                    {/* Comments list */}
+                    <div style={{ maxHeight: 200, overflowY: 'auto', padding: '8px 16px' }}>
+                        {loadingCmts ? (
+                            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 11, color: '#888', padding: '8px 0' }}>жүктелуде...</div>
+                        ) : comments.length === 0 ? (
+                            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 11, color: '#bbb', padding: '8px 0', textAlign: 'center' }}>
+                                Бірінші болып комментарий жазыңыз 💬
+                            </div>
+                        ) : comments.map((c, i) => (
+                            <div key={c.id || i} style={{ padding: '6px 0', borderBottom: '1px solid #eee', display: 'flex', gap: 8 }}>
+                                <div style={{ width: 26, height: 26, background: '#000', border: '1.5px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#fff', flexShrink: 0 }}>
+                                    {(c.user?.username || c.user?.firstname || '?')[0]?.toUpperCase()}
+                                </div>
+                                <div>
+                                    <span style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: 11 }}>@{c.user?.username || 'user'} </span>
+                                    <span style={{ fontSize: 13 }}>{c.content}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {/* Comment input */}
+                    <div style={{ display: 'flex', borderTop: '1.5px solid #e0e0e0' }}>
+                        <input
+                            style={{ flex: 1, border: 'none', outline: 'none', padding: '10px 14px', fontFamily: "'Space Mono',monospace", fontSize: 12, background: '#fafafa' }}
+                            placeholder="Комментарий жазыңыз..."
+                            value={commentText}
+                            onChange={e => setCommentText(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && submitComment()}
+                        />
+                        <button
+                            onClick={submitComment}
+                            disabled={sendingCmt || !commentText.trim()}
+                            style={{
+                                background: commentText.trim() ? '#000' : '#e0e0e0', color: '#fff', border: 'none',
+                                padding: '0 16px', fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: 13,
+                                cursor: commentText.trim() ? 'pointer' : 'default', transition: 'background 0.15s',
+                            }}
+                        >{sendingCmt ? '...' : '→'}</button>
+                    </div>
+                </div>
+            )}
         </article>
     )
 }
@@ -560,7 +643,7 @@ export default function Home() {
                             }}>+</div>
                             <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 9, color: '#000', fontWeight: 700 }}>СЕН</span>
                         </button>
-                        {STORIES.map(s => <StoryBubble key={s.id} s={s} />)}
+                        {stories.map(s => <StoryBubble key={s.id} s={s} />)}
                     </div>
 
                     {/* Posts — desktop-та қашанда көрінеді, mobile-да тек feed режимінде */}

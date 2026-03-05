@@ -42,22 +42,22 @@ function PostPanel() {
 
     const submit = async () => {
         if (!caption.trim() && !file) {
-            setError('Сипаттама немесе файл қажет')
+            setError('Сипаттама немесе фото қажет')
             return
         }
         setLoading(true); setError(null)
         try {
-            if (file) {
-                // Нақты бэкенд API
-                await createPost(caption, file)
-            } else {
-                // Текст ғана — Event арқылы жариялаймыз
-                await createEvent({ title: caption, description: caption, category: 'POST' })
-            }
+            // Файл бар болса multipart, жоқ болса тек caption
+            await createPost(caption, file)
             setDone(true)
         } catch (e) {
-            const msg = e?.response?.data?.message || e?.response?.data?.error || ''
-            setError(msg || `Жариялау қатесі (${e?.response?.status || 'желі'})`)
+            const status = e?.response?.status
+            if (status === 401 || status === 403) {
+                setError('🔐 Жүйеге кіруіңіз қажет! /auth/login бетіне өтіңіз')
+            } else {
+                const msg = e?.response?.data?.message || e?.response?.data?.error || ''
+                setError(msg || `Жариялау қатесі (${status || 'желі'})`)
+            }
         } finally {
             setLoading(false)
         }

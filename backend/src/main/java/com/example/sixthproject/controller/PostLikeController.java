@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 
 @RestController
-@RequestMapping("/posts/likes")
+@RequestMapping("/api/likes")
 @RequiredArgsConstructor
 public class PostLikeController {
 

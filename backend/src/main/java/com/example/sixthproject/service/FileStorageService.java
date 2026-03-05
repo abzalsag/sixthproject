@@ -1,47 +1,55 @@
 package com.example.sixthproject.service;
 
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
+/**
+ * LocalFileStorageService — MinIO орнына жергілікті дискіге сақтайды.
+ * Файлдар ./uploads/ қалтасына жазылады.
+ * URL: /api/uploads/{filename} арқылы қолжетімді.
+ */
 @Service
 public class FileStorageService {
 
-    @Autowired
-    private MinioClient minioClient;
+    @Value("${app.upload-dir:uploads}")
+    private String uploadDir;
 
-    @Value("${minio.bucket-name}")
-    private String bucketName;
-
+    /**
+     * Файлды дискіге сақтап, URL қайтарады.
+     */
     public String uploadFile(MultipartFile file) {
         try {
+            // Қалтаны жасау (жоқ болса)
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Files.createDirectories(uploadPath);
 
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            // Бірегей файл атауы
+            String fileName = System.currentTimeMillis() + "_" + sanitize(file.getOriginalFilename());
+            Path targetPath = uploadPath.resolve(fileName);
 
-            InputStream inputStream = file.getInputStream();
+            // Файлды көшіру
+            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
+            // Frontend-ке берілетін URL (Vite proxy арқылы /api/uploads/{name})
+            return "/api/uploads/" + fileName;
 
-            minioClient.putObject(
-                    PutObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(fileName)
-                            .stream(inputStream, file.getSize(), -1)
-                            .contentType(file.getContentType())
-                            .build()
-            );
-
-
-            return fileName;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-
-            throw new RuntimeException("MinIO-ға жүктеу мүмкін болмады: " + e.getMessage());
+        } catch (IOException e) {
+            throw new RuntimeException("Файлды сақтау мүмкін болмады: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Файл атауын тазалаймыз (path traversal қаупінен сақтаймыз)
+     */
+    private String sanitize(String filename) {
+        if (filename == null) return "file";
+        return filename.replaceAll("[^a-zA-Z0-9._-]", "_");
     }
 }

@@ -31,31 +31,21 @@ public class SecurityConfiguration {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
-
-
+                        .requestMatchers("/api/uploads/**").permitAll()
                         .requestMatchers("/api/files/**").permitAll()
-                        .requestMatchers("/api/redis/**").permitAll()
-                        .requestMatchers("/api/v1/events/**").permitAll()
                         .requestMatchers("/api/v1/users/avatar/**").permitAll()
-                        .requestMatchers("/api/payments/**").permitAll()
-
-
+                        .requestMatchers("/api/events/**").permitAll()
+                        .requestMatchers("/api/stories/**").permitAll()
+                        .requestMatchers("/api/posts/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/app/**").permitAll()
                         .requestMatchers("/topic/**").permitAll()
-
-
-
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/webjars/**"
                         ).permitAll()
-
-                        .requestMatchers("/posts/**").authenticated()
-
-
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

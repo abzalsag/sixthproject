@@ -24,17 +24,18 @@ public class PostService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User табылмады!"));
 
-
-        String fileName = fileStorageService.uploadFile(file);
-
+        // Файл міндетті емес — text-only пост рұқсат
+        String imageUrl = null;
+        if (file != null && !file.isEmpty()) {
+            imageUrl = fileStorageService.uploadFile(file);
+        }
 
         Post post = Post.builder()
                 .caption(caption)
-                .imageUrl(fileName)
+                .imageUrl(imageUrl)
                 .user(user)
                 .likesCount(0)
                 .build();
-
 
         return postRepository.save(post);
     }
